@@ -14,6 +14,17 @@ module basys3_top (
     input  logic        btnR,
     input  logic        btnD,
 
+    output logic [3:0]  vgaRed,
+    output logic [3:0]  vgaBlue,
+    output logic [3:0]  vgaGreen,
+
+    output logic        Hsync,
+    output logic        Vsync,
+
+    input  logic        PS2Clk,
+    input  logic        PS2Data,
+    input  logic        pwm
+
     // Pmod JA
     input logic [7:0] JA
 );
@@ -26,7 +37,7 @@ module basys3_top (
     logic [7:0] uio_out;
     logic [7:0] uio_oe;
 
-    heichips26_digital_project heichips26_digital_project (
+    heichips26_daftASIC daftASIC_i (
         .ui_in,    // Dedicated inputs
         .uo_out,   // Dedicated outputs
         .uio_in,   // IOs: Input path
@@ -39,13 +50,24 @@ module basys3_top (
 
     // Assignments
 
-    assign ui_in = sw[7:0];
-    assign uio_in = sw[15:8];
+    assign ui_in  [0] = PS2Data;
+    assign ui_in  [1] = PS2Clk;
+    assign ui_in[7:2] = '0;
+
+    assign uio_in = '0;
 
     assign led[7:0] = uo_out;
     assign led[15:8] = uio_out;
 
     assign ena = 1'b1;
     assign rst_n = !btnC;
+
+    assign Hsync    = uo_out[0];
+    assign Vsync    = uo_out[1];
+    assign vgaRed   = {4{uo_out[2]}};
+    assign vgaGreen = {4{uo_out[3]}};
+    assign vgaBlue  = {4{uo_out[4]}};
+
+    assign JA[0]    = uo_out[5];
 
 endmodule
