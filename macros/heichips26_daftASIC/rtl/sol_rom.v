@@ -1,7 +1,7 @@
 module sol_rom (address, data);
 
      input [6:0] address;
-     output [63:0] data;
+     output reg [63:0] data;
 
 
      always @(address) begin
