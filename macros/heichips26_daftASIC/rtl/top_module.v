@@ -27,7 +27,7 @@ module top_module (reset, pixel_clk, ps2clk, ps2data, hsync, vsync, red, green, 
 	wire [10:0] high_frequency_pwm_counter;
      wire [7:0] scancode;
      wire [2:0] note;
-     wire valid, pwm_clk, line_placement, display_area;
+     wire valid, pwm_clk, line_placement, clef_placement, display_area;
      wire high_frequency_pwm_enable;
      wire note_serial_out;
 
@@ -42,14 +42,15 @@ module top_module (reset, pixel_clk, ps2clk, ps2data, hsync, vsync, red, green, 
           .ROM_DATA_WIDTH (ROM_DATA_WIDTH),
           .ROM_ADDR_WIDTH (ROM_ADDR_WIDTH)
      ) monitor (
-          reset,
-          pixel_clk,
-          note,
-          hsync,
-          vsync,
-          line_placement,
-          display_area,
-          address
+          .reset             (reset),
+          .clk               (pixel_clk),
+          .note              (note),
+          .hsync             (hsync),
+          .vsync             (vsync),
+          .clef_placement    (clef_placement),
+          .line_placement    (line_placement),
+          .note_display_area (display_area),
+          .memory_address    (address)
      );
 
 	note_memory memory (address, data);
@@ -69,7 +70,7 @@ module top_module (reset, pixel_clk, ps2clk, ps2data, hsync, vsync, red, green, 
 
      // Replication operator to produce the RGB for display easily.
      // No need to carry 9 bits around before we reach the display
-     assign {red, green, blue} = {3{line_placement | note_serial_out}};
+     assign {red, green, blue} = {3{line_placement | note_serial_out | clef_placement}};
 
 
 endmodule

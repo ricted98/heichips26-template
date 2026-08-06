@@ -53,7 +53,7 @@ module vga_protocol (reset, clk, note, hsync, vsync, line_placement, clef_placem
      // Treble clef parameters
      localparam TREBLE_THICKNESS = 64;
      localparam TREBLE_HEIGHT = 128;
-     localparam TREBLE_CLEF_START = LINE_FIRST - 19;
+     localparam TREBLE_CLEF_START = LINE_FIRST - 18;
      localparam TREBLE_CLEF_END = TREBLE_CLEF_START + TREBLE_HEIGHT;
      localparam TREBLE_CLEF_LEFT = H_END - H_VISIBLE_PIXELS + NOTE_THICKNESS;
      localparam TREBLE_CLEF_RIGHT = TREBLE_CLEF_LEFT + TREBLE_THICKNESS;
@@ -67,7 +67,7 @@ module vga_protocol (reset, clk, note, hsync, vsync, line_placement, clef_placem
      reg [8:0] line_counter;
      reg [7:0] top_of_note;
 
-     wire [2:0] note_type;
+     wire [3:0] note_type;
 	wire [8:0] bottom_of_note;
      wire [5:0] line_from_memory;
      wire [6:0] clef_from_memory;
@@ -116,7 +116,7 @@ module vga_protocol (reset, clk, note, hsync, vsync, line_placement, clef_placem
      assign clef_placement = clef_display_area & clef_data[(TREBLE_CLEF_LEFT+TREBLE_THICKNESS-1) - pixel_counter];
 
      // Optimized logic for the memory pointer
-     assign note_type = {2'b00, ~note[0], ~&note};
+     assign note_type = {2'b11, &note, note[0]};
 
      // Logic for top and bottom borders of note being displayed.
      // Basically, there are 3 types of notes: "through line", "between lines" and "upside-down"
