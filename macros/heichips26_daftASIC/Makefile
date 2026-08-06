@@ -31,8 +31,12 @@ LIBRELANE_DIR 	:= flow/librelane
 FLOW_FINAL_DIR 	:= flow/final
 FINAL_DIR      	:= final
 
+# Bender
+BENDER := bender
+BENDER_TARGETS := -t cc_no_deprecated
+
 # Variables for simulation and linting targets
-MODULES_SYNTH := $(shell bender script flist)
+MODULES_SYNTH := $(shell $(BENDER) script --no-deps flist $(BENDER_TARGETS))
 
 MODULES_SIM := \
 	$(MODULES_SYNTH)
@@ -114,30 +118,35 @@ sim-all: ## Simulate the macro (RTL Verilog + RTL/GL cocotb for heichips26_daftA
 .PHONY: sim-all
 # ================================================================================================
 
+LIBRELANE_CONFIG_FILES := $(LIBRELANE_DIR)/.generated/sources.yaml $(LIBRELANE_DIR)/config.yaml
+
+$(LIBRELANE_DIR)/.generated/sources.yaml:
+	mkdir -p $(dir $@)
+	$(BENDER) script --no-deps flist-plus $(BENDER_TARGETS) -t synthesis | awk -f utils/flist2yml.awk > $@
 
 # LibreLane Targets
-librelane: ## Run LibreLane with Magic and KLayout DRC checks.
-	librelane $(LIBRELANE_DIR)/config.yaml --pdk ${PDK} --pdk-root ${PDK_ROOT} --manual-pdk --save-views-to $(FLOW_FINAL_DIR)/
+librelane: $(LIBRELANE_CONFIG_FILES) ## Run LibreLane with Magic and KLayout DRC checks.
+	librelane $(LIBRELANE_CONFIG_FILES) --pdk ${PDK} --pdk-root ${PDK_ROOT} --manual-pdk --save-views-to $(FLOW_FINAL_DIR)/
 .PHONY: librelane
 
-librelane-nodrc: ## Run LibreLane without DRC checks
-	librelane $(LIBRELANE_DIR)/config.yaml --pdk ${PDK} --pdk-root ${PDK_ROOT} --manual-pdk --save-views-to $(FLOW_FINAL_DIR)/ --skip KLayout.DRC --skip Magic.DRC
+librelane-nodrc: $(LIBRELANE_CONFIG_FILES) ## Run LibreLane without DRC checks
+	librelane $(LIBRELANE_CONFIG_FILES) --pdk ${PDK} --pdk-root ${PDK_ROOT} --manual-pdk --save-views-to $(FLOW_FINAL_DIR)/ --skip KLayout.DRC --skip Magic.DRC
 .PHONY: librelane-nodrc
 
-librelane-magicdrc: ## Run LibreLane with only Magic DRC checks
-	librelane $(LIBRELANE_DIR)/config.yaml --pdk ${PDK} --pdk-root ${PDK_ROOT} --manual-pdk --save-views-to $(FLOW_FINAL_DIR)/ --skip KLayout.DRC
+librelane-magicdrc: $(LIBRELANE_CONFIG_FILES) ## Run LibreLane with only Magic DRC checks
+	librelane $(LIBRELANE_CONFIG_FILES) --pdk ${PDK} --pdk-root ${PDK_ROOT} --manual-pdk --save-views-to $(FLOW_FINAL_DIR)/ --skip KLayout.DRC
 .PHONY: librelane-magicdrc
 
-librelane-klayoutdrc: ## Run LibreLane with only KLayout DRC checks
-	librelane $(LIBRELANE_DIR)/config.yaml --pdk ${PDK} --pdk-root ${PDK_ROOT} --manual-pdk --save-views-to $(FLOW_FINAL_DIR)/ --skip Magic.DRC
+librelane-klayoutdrc: $(LIBRELANE_CONFIG_FILES) ## Run LibreLane with only KLayout DRC checks
+	librelane $(LIBRELANE_CONFIG_FILES) --pdk ${PDK} --pdk-root ${PDK_ROOT} --manual-pdk --save-views-to $(FLOW_FINAL_DIR)/ --skip Magic.DRC
 .PHONY: librelane-klayoutdrc
 
-librelane-openroad: ## Open the last LibreLane run in OpenROAD GUI
-	librelane $(LIBRELANE_DIR)/config.yaml --pdk ${PDK} --pdk-root ${PDK_ROOT} --manual-pdk --last-run --flow OpenInOpenROAD
+librelane-openroad: $(LIBRELANE_CONFIG_FILES) ## Open the last LibreLane run in OpenROAD GUI
+	librelane $(LIBRELANE_CONFIG_FILES) --pdk ${PDK} --pdk-root ${PDK_ROOT} --manual-pdk --last-run --flow OpenInOpenROAD
 .PHONY: librelane-openroad
 
-librelane-klayout: ## Open the last LibreLane run in KLayout
-	librelane $(LIBRELANE_DIR)/config.yaml --pdk ${PDK} --pdk-root ${PDK_ROOT} --manual-pdk --last-run --flow OpenInKLayout
+librelane-klayout: $(LIBRELANE_CONFIG_FILES) ## Open the last LibreLane run in KLayout
+	librelane $(LIBRELANE_CONFIG_FILES) --pdk ${PDK} --pdk-root ${PDK_ROOT} --manual-pdk --last-run --flow OpenInKLayout
 .PHONY: librelane-klayout
 # ================================================================================================
 
