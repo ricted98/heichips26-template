@@ -15,13 +15,17 @@
 
 module top_module (reset, pixel_clk, ps2clk, ps2data, hsync, vsync, red, green, blue, pwm);
 
+     localparam ROM_DATA_WIDTH = 32;
+     localparam ROM_ADDR_WIDTH = 10;
+
      input reset, pixel_clk, ps2clk, ps2data;
      output hsync, vsync, pwm;
      output red, green, blue;
 
-     wire [34:0] data;
+     wire [ROM_DATA_WIDTH-1:0] data;
+     wire [ROM_ADDR_WIDTH-1:0] address;
 	wire [10:0] high_frequency_pwm_counter;
-     wire [7:0] scancode, address;
+     wire [7:0] scancode;
      wire [2:0] note;
      wire valid, pwm_clk, line_placement, display_area;
      wire high_frequency_pwm_enable;
@@ -34,9 +38,31 @@ module top_module (reset, pixel_clk, ps2clk, ps2data, hsync, vsync, red, green, 
      kbd_decoder scan_decode (reset, pixel_clk, valid, scancode, note, high_frequency_pwm_counter, high_frequency_pwm_enable);
 
      // Display-related instantiations
-     vga_protocol monitor (reset, pixel_clk, note, hsync, vsync, line_placement, display_area, address);
+     vga_protocol #(
+          .ROM_DATA_WIDTH (ROM_DATA_WIDTH),
+          .ROM_ADDR_WIDTH (ROM_ADDR_WIDTH)
+     ) monitor (
+          reset,
+          pixel_clk,
+          note,
+          hsync,
+          vsync,
+          line_placement,
+          display_area,
+          address
+     );
+
 	note_memory memory (address, data);
-     parallel_to_serial p2s (reset, pixel_clk, data, display_area, note_serial_out);
+
+     parallel_to_serial #(
+          .ROM_DATA_WIDTH (ROM_DATA_WIDTH)
+     ) p2s (
+          reset,
+          pixel_clk,
+          data,
+          display_area,
+          note_serial_out
+     );
 
      // Audio-related instantiations
      pwm_driver piezo_driver_module (reset, pixel_clk, pwm_clk, high_frequency_pwm_counter, high_frequency_pwm_enable, pwm);

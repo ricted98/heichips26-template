@@ -15,6 +15,10 @@
 
 module vga_protocol (reset, clk, note, hsync, vsync, line_placement, clef_placement, note_display_area, memory_address);
 
+     // Note memory ROM parameters
+     parameter ROM_DATA_WIDTH = 32;
+     parameter ROM_ADDR_WIDTH = 10;
+
      // VGA parameters (Horizontal)
      parameter H_FRONT_PORCH = 16;
      parameter H_SYNC_PULSE = 96;
@@ -41,7 +45,7 @@ module vga_protocol (reset, clk, note, hsync, vsync, line_placement, clef_placem
      localparam LINE_SIXTH = LINE_FIFTH + LINE_TO_LINE_DISTANCE;
 
      // Note parameters
-     localparam NOTE_THICKNESS = 32;
+     localparam NOTE_THICKNESS = ROM_DATA_WIDTH;
      localparam NOTE_HEIGHT = 64;
      localparam H_LEFT_BORDER = (H_SYNC_PULSE + H_BACK_PORCH + H_END - NOTE_THICKNESS - 1) / 2;
      localparam H_RIGHT_BORDER = H_LEFT_BORDER + NOTE_THICKNESS;
@@ -57,13 +61,13 @@ module vga_protocol (reset, clk, note, hsync, vsync, line_placement, clef_placem
      input reset, clk;
      input [2:0] note;
      output hsync, vsync, line_placement, clef_placement, note_display_area;
-     output [7:0] memory_address;
+     output [ROM_ADDR_WIDTH-1:0] memory_address;
 
      reg [9:0] pixel_counter;
      reg [8:0] line_counter;
      reg [7:0] top_of_note;
 
-     wire [1:0] note_type;
+     wire [2:0] note_type;
 	wire [8:0] bottom_of_note;
      wire [5:0] line_from_memory;
      wire [6:0] clef_from_memory;
@@ -112,7 +116,7 @@ module vga_protocol (reset, clk, note, hsync, vsync, line_placement, clef_placem
      assign clef_placement = clef_display_area & clef_data[(TREBLE_CLEF_LEFT+TREBLE_THICKNESS-1) - pixel_counter];
 
      // Optimized logic for the memory pointer
-     assign note_type = {~|note | &note, ~note[0]};
+     assign note_type = {2'b00, ~note[0], ~&note};
 
      // Logic for top and bottom borders of note being displayed.
      // Basically, there are 3 types of notes: "through line", "between lines" and "upside-down"

@@ -14,7 +14,10 @@
 // under the License.
 
 module parallel_to_serial (reset, clk, data, note_display_area, note_serial_out);
-     input [34:0] data;
+
+     parameter ROM_DATA_WIDTH = 35;
+
+     input [ROM_DATA_WIDTH-1:0] data;
      input reset, clk, note_display_area;
      output reg note_serial_out;
 
@@ -34,8 +37,8 @@ module parallel_to_serial (reset, clk, data, note_display_area, note_serial_out)
                     note_serial_out <= 0;
                end
                else begin
-                    note_serial_out <= data[34 - counter];
-                    if (counter == 34) counter <= 0;
+                    note_serial_out <= data[(ROM_DATA_WIDTH-1) - counter];
+                    if (counter == (ROM_DATA_WIDTH-1)) counter <= 0;
                     else counter <= counter + 1;
                end
           end
