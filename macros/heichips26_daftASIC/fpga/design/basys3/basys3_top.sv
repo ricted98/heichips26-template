@@ -73,7 +73,7 @@ module basys3_top (
     // Clock divider 100 MHz -> 25 MHz
 
     fpga_clk_div clk_div_25MHz (
-        .reset   (rst_n),
+        .reset   (~rst_n),
         .clk,
         .clk_out (clk_25MHz)
     );
