@@ -6,7 +6,7 @@ MAKEFILE_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 RUN_TAG = $(shell ls -1 $(LIBRELANE_DIR)/runs 2>/dev/null | tail -n 1)
 
 # Variables
-TOP = heichips26_digital_project
+TOP = heichips26_daftASIC
 
 .DEFAULT_GOAL := help
 
@@ -32,11 +32,7 @@ FLOW_FINAL_DIR 	:= flow/final
 FINAL_DIR      	:= final
 
 # Variables for simulation and linting targets
-# The counter sub-macro is hardened separately (see macros/counter/), but its RTL
-# is needed for linting and RTL simulation of the whole design.
-MODULES_SYNTH := \
-	$(SRC_DIR)/heichips26_digital_project.sv \
-	$(MACROS_DIR)/counter/rtl/counter.sv
+MODULES_SYNTH := $(shell bender script flist)
 
 MODULES_SIM := \
 	$(MODULES_SYNTH)
@@ -69,7 +65,7 @@ lint-verilog: ## Lint Verilog source files with Verilator (usage: make lint-veri
 	verilator --lint-only -I"$(SRC_DIR)" $(_LINT_SRCS)
 .PHONY: lint-verilog
 
-lint-verilog-all: ## Lint all Verilog source files (counter sub-macro + heichips26_digital_project)
+lint-verilog-all: ## Lint all Verilog source files (counter sub-macro + heichips26_daftASIC)
 	$(MAKE) -C $(MACROS_DIR)/counter lint-verilog-all
 	$(MAKE) lint-verilog
 .PHONY: lint-verilog-all
@@ -111,7 +107,7 @@ sim-view-cocotb: ## View CELL cell cocotb simulation waveforms (usage: make sim-
 	fi
 .PHONY: sim-view-cocotb
 
-sim-all: ## Simulate the macro (RTL Verilog + RTL/GL cocotb for heichips26_digital_project)
+sim-all: ## Simulate the macro (RTL Verilog + RTL/GL cocotb for heichips26_daftASIC)
 	$(MAKE) sim-rtl-verilog
 	$(MAKE) sim-rtl-cocotb
 	$(MAKE) sim-gl-cocotb
