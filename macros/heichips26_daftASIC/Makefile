@@ -33,10 +33,9 @@ FINAL_DIR      	:= final
 
 # Bender
 BENDER := bender
-BENDER_TARGETS := -t cc_no_deprecated
 
 # Variables for simulation and linting targets
-MODULES_SYNTH := $(shell $(BENDER) script --no-deps flist $(BENDER_TARGETS))
+MODULES_SYNTH := $(shell $(BENDER) script flist)
 
 MODULES_SIM := \
 	$(MODULES_SYNTH)
@@ -129,7 +128,7 @@ LIBRELANE_CONFIG_FILES := $(LIBRELANE_DIR)/.generated/sources.yaml $(LIBRELANE_D
 
 $(LIBRELANE_DIR)/.generated/sources.yaml:
 	mkdir -p $(dir $@)
-	$(BENDER) script --no-deps flist-plus $(BENDER_TARGETS) -t synthesis | awk -f utils/flist2yml.awk > $@
+	$(BENDER) script flist-plus -t synthesis | awk -f utils/flist2yml.awk > $@
 
 # LibreLane Targets
 librelane: $(LIBRELANE_CONFIG_FILES) ## Run LibreLane with Magic and KLayout DRC checks.
