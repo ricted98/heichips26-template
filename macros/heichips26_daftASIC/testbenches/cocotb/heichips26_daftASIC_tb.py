@@ -822,13 +822,15 @@ def heichips26_daftASIC_runner():
     if sim == "verilator":
         build_args = ["--timing", "--trace", "--trace-fst", "--trace-structs"]
 
+    build_args += ["-f", str(proj_path / "../../.generated/flist")]
+
     runner = get_runner(sim)
     runner.build(
-        sources=sources,
+        #sources=sources,
         hdl_toplevel=hdl_toplevel,
-        defines=defines,
+        #defines=defines,
         always=True,
-        includes=includes,
+        #includes=includes,
         build_args=build_args,
         waves=True,
         timescale=("1ns", "1fs")
@@ -838,6 +840,7 @@ def heichips26_daftASIC_runner():
 
     runner.test(
         hdl_toplevel=hdl_toplevel,
+        hdl_toplevel_lang="verilog",
         test_module="heichips26_daftASIC_tb",
         plusargs=plusargs,
         waves=True,
