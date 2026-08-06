@@ -13,27 +13,27 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-module vga_protocol (reset, clk, note, hsync, vsync, line_placement, display_area, memory_address);
+module vga_protocol (reset, clk, note, hsync, vsync, line_placement, clef_placement, note_display_area, memory_address);
 
      // VGA parameters (Horizontal)
      parameter H_FRONT_PORCH = 16;
      parameter H_SYNC_PULSE = 96;
      parameter H_BACK_PORCH = 48;
      parameter H_VISIBLE_PIXELS = 640;
-     localparam H_END = H_FRONT_PORCH + H_SYNC_PULSE + H_BACK_PORCH + H_VISIBLE_PIXELS;      // H_END = 800
+     localparam H_END = H_FRONT_PORCH + H_SYNC_PULSE + H_BACK_PORCH + H_VISIBLE_PIXELS;          // H_END = 800
 
      // VGA parameters (Vertical)
      parameter V_FRONT_PORCH = 12;
      parameter V_SYNC_PULSE = 2;
      parameter V_BACK_PORCH = 35;
      parameter V_VISIBLE_LINES = 400;
-     localparam V_END = V_FRONT_PORCH + V_SYNC_PULSE + V_BACK_PORCH + V_VISIBLE_LINES;      // V_END = 449
+     localparam V_END = V_FRONT_PORCH + V_SYNC_PULSE + V_BACK_PORCH + V_VISIBLE_LINES;           // V_END = 449
 
      // Sheet line parameters
      parameter LINE_THICKNESS = 3;
      parameter LINE_TO_LINE_DISTANCE = 20;
      parameter BEGINNING_FROM_TOP = 90;
-     localparam LINE_FIRST = BEGINNING_FROM_TOP + V_FRONT_PORCH + V_SYNC_PULSE + V_BACK_PORCH; // 90 + (12 + 2 + 35) = 139
+     localparam LINE_FIRST = BEGINNING_FROM_TOP + V_FRONT_PORCH + V_SYNC_PULSE + V_BACK_PORCH;   // 90 + (12 + 2 + 35) = 139
      localparam LINE_SECOND = LINE_FIRST + LINE_TO_LINE_DISTANCE;
      localparam LINE_THIRD = LINE_SECOND + LINE_TO_LINE_DISTANCE;
      localparam LINE_FOURTH = LINE_THIRD + LINE_TO_LINE_DISTANCE;
@@ -41,13 +41,22 @@ module vga_protocol (reset, clk, note, hsync, vsync, line_placement, display_are
      localparam LINE_SIXTH = LINE_FIFTH + LINE_TO_LINE_DISTANCE;
 
      // Note parameters
-     localparam NOTE_THICKNESS = 35;
+     localparam NOTE_THICKNESS = 32;
+     localparam NOTE_HEIGHT = 64;
      localparam H_LEFT_BORDER = (H_SYNC_PULSE + H_BACK_PORCH + H_END - NOTE_THICKNESS - 1) / 2;
      localparam H_RIGHT_BORDER = H_LEFT_BORDER + NOTE_THICKNESS;
 
+     // Treble clef parameters
+     localparam TREBLE_THICKNESS = 64;
+     localparam TREBLE_HEIGHT = 128;
+     localparam TREBLE_CLEF_START = LINE_FIRST - 19;
+     localparam TREBLE_CLEF_END = TREBLE_CLEF_START + TREBLE_HEIGHT;
+     localparam TREBLE_CLEF_LEFT = H_END - H_VISIBLE_PIXELS + NOTE_THICKNESS;
+     localparam TREBLE_CLEF_RIGHT = TREBLE_CLEF_LEFT + TREBLE_THICKNESS;
+
      input reset, clk;
      input [2:0] note;
-     output hsync, vsync, line_placement, display_area;
+     output hsync, vsync, line_placement, clef_placement, note_display_area;
      output [7:0] memory_address;
 
      reg [9:0] pixel_counter;
@@ -57,6 +66,8 @@ module vga_protocol (reset, clk, note, hsync, vsync, line_placement, display_are
      wire [1:0] note_type;
 	wire [8:0] bottom_of_note;
      wire [5:0] line_from_memory;
+     wire [6:0] clef_from_memory;
+     wire [63:0] clef_data;
 
 
      always @(posedge reset or posedge clk) begin
@@ -91,6 +102,15 @@ module vga_protocol (reset, clk, note, hsync, vsync, line_placement, display_are
                              ((line_counter > LINE_FIFTH)  && (line_counter < LINE_FIFTH+LINE_THICKNESS+1)  &&
                               (pixel_counter > H_END-H_VISIBLE_PIXELS-1) && (pixel_counter < H_END));
 
+     // Read out the look-up table values of the Sol ROM in an appropriate place
+     assign clef_from_memory = (line_counter >= TREBLE_CLEF_START) ? (line_counter - TREBLE_CLEF_START) : 0;
+
+     sol_rom treble (clef_from_memory, clef_data);
+
+     assign clef_display_area = (line_counter > TREBLE_CLEF_START) && (line_counter < TREBLE_CLEF_END+1) &&
+                                (pixel_counter >= TREBLE_CLEF_LEFT) && (pixel_counter <= TREBLE_CLEF_RIGHT);
+     assign clef_placement = clef_display_area & clef_data[(TREBLE_CLEF_LEFT+TREBLE_THICKNESS-1) - pixel_counter];
+
      // Optimized logic for the memory pointer
      assign note_type = {~|note | &note, ~note[0]};
 
@@ -99,7 +119,7 @@ module vga_protocol (reset, clk, note, hsync, vsync, line_placement, display_are
      // "Through line"    -> Do, Mi, Sol
      // "Between lines"   -> Re, Fa, La
      // "Upside down"     -> Ci
-     assign bottom_of_note = top_of_note + 63;
+     assign bottom_of_note = top_of_note + (NOTE_HEIGHT-1);
      always @(posedge reset or posedge clk) begin
           if (reset) top_of_note <= 0;
           else begin
@@ -118,8 +138,8 @@ module vga_protocol (reset, clk, note, hsync, vsync, line_placement, display_are
 
 
      // Movable display area so as to use 3 types of notes basically instead of just a bigger ROM and 7 hard-coded notes
-     assign display_area = ((pixel_counter >= H_LEFT_BORDER) && (pixel_counter <= H_RIGHT_BORDER) &&
-                               (line_counter >= top_of_note) && (line_counter <= bottom_of_note));
+     assign note_display_area = ((pixel_counter >= H_LEFT_BORDER) && (pixel_counter <= H_RIGHT_BORDER) &&
+                                    (line_counter >= top_of_note) && (line_counter <= bottom_of_note));
      assign line_from_memory = (line_counter >= top_of_note) ? (line_counter - top_of_note) : 0;
 
      // Final address to go to Note Character ROM
