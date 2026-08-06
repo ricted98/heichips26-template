@@ -53,7 +53,7 @@ module quarter_line_stem_up_rom (address, data);
                44: data = 32'b00000000001111111111000000000000;
                45: data = 32'b00000000000111111110000000000000;
                46: data = 32'b00000000000001111000000000000000;
-               default: data = 32'bxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx;
+               default: data = 32'b0;
           endcase
      end
 

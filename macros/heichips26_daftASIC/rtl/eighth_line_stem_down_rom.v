@@ -53,7 +53,7 @@ module eighth_line_stem_down_rom (address, data);
                44: data = 32'b00000000011111000000000000000000;
                45: data = 32'b00000000011110000000000000000000;
                46: data = 32'b00000000011100000000000000000000;
-               default: data = 32'bxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx;
+               default: data = 32'b0;
           endcase
      end
 

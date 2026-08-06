@@ -53,7 +53,7 @@ module full_space_stem_down_rom (address, data);
                44: data = 32'b00000000000000000000000000000000;
                45: data = 32'b00000000000000000000000000000000;
                46: data = 32'b00000000000000000000000000000000;
-               default: data = 32'bxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx;
+               default: data = 32'b0;
           endcase
      end
 
