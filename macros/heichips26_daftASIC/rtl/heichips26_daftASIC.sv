@@ -40,6 +40,7 @@ module heichips26_daftASIC (
     assign uio_oe       = '1;
     assign uio_out[2:0] = blue;
     assign uio_out  [3] = pwm;
+    assign uio_out[7:4] = '0;
 
     // List all unused inputs to prevent warnings
     wire _unused;
