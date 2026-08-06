@@ -78,7 +78,7 @@ SIM_RTL_DEPS += .generated/flist
 
 .generated/flist:
 	mkdir -p $(dir $@)
-	$(BENDER) script --no-deps flist-plus $(BENDER_TARGETS) > $@
+	$(BENDER) script flist-plus $(BENDER_TARGETS) > $@
 
 # Simulation Targets
 sim-rtl-verilog: $(SIM_RTL_DEPS) ## Run RTL simulation of CELL cell with Icarus Verilog (usage: make sim-rtl-verilog [CELL=<cellname>])
@@ -99,7 +99,7 @@ sim-view-verilog: ## View CELL cell Verilog simulation waveforms (usage: make si
 
 sim-rtl-cocotb: $(SIM_RTL_DEPS) ## Run RTL simulation of CELL cell with cocotb (usage: make sim-rtl-cocotb [CELL=<cellname>])
 	mkdir -p .generated
-	$(BENDER) script --no-deps flist-plus $(BENDER_TARGETS) > .generated/flist
+	$(BENDER) script flist-plus $(BENDER_TARGETS) > .generated/flist
 	cd $(COCOTB_DIR) && python3 $(CELL)_tb.py
 .PHONY: sim-rtl-cocotb
 
