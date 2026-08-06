@@ -50,10 +50,10 @@ PDN_HORIZONTAL_LAYER: Metal3
 
 # Enable for better SystemVerilog support
 USE_SLANG: true
-SLANG_ARGUMENTS:
-  - "-keep-hierarchy"
+# SLANG_ARGUMENTS:
+#   - "-keep-hierarchy"
 
-SYNTH_HIERARCHY_MODE: keep
+# SYNTH_HIERARCHY_MODE: keep
 
 MACROS:
   # counter:
