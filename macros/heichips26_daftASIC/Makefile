@@ -75,9 +75,14 @@ lint-verilog-all: ## Lint all Verilog source files (counter sub-macro + heichips
 .PHONY: lint-verilog-all
 # ================================================================================================
 
+SIM_RTL_DEPS += .generated/flist
+
+.generated/flist:
+	mkdir -p $(dir $@)
+	$(BENDER) script --no-deps flist-plus $(BENDER_TARGETS) > $@
 
 # Simulation Targets
-sim-rtl-verilog: ## Run RTL simulation of CELL cell with Icarus Verilog (usage: make sim-rtl-verilog [CELL=<cellname>])
+sim-rtl-verilog: $(SIM_RTL_DEPS) ## Run RTL simulation of CELL cell with Icarus Verilog (usage: make sim-rtl-verilog [CELL=<cellname>])
 	iverilog -g2012 -DSIM -o $(VERILOG_TB_DIR)/test_$(CELL) $(_SIM_SRCS) $(VERILOG_TB_DIR)/$(CELL)_tb.$(_TB_EXT)
 	cd $(VERILOG_TB_DIR) && vvp test_$(CELL) -fst
 	rm -f $(VERILOG_TB_DIR)/test_$(CELL)
@@ -93,7 +98,9 @@ sim-view-verilog: ## View CELL cell Verilog simulation waveforms (usage: make si
 	fi
 .PHONY: sim-view-verilog
 
-sim-rtl-cocotb: ## Run RTL simulation of CELL cell with cocotb (usage: make sim-rtl-cocotb [CELL=<cellname>])
+sim-rtl-cocotb: $(SIM_RTL_DEPS) ## Run RTL simulation of CELL cell with cocotb (usage: make sim-rtl-cocotb [CELL=<cellname>])
+	mkdir -p .generated
+	$(BENDER) script --no-deps flist-plus $(BENDER_TARGETS) > .generated/flist
 	cd $(COCOTB_DIR) && python3 $(CELL)_tb.py
 .PHONY: sim-rtl-cocotb
 
