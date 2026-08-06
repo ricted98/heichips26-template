@@ -13,23 +13,21 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-module top_module (reset, clk, ps2clk, ps2data, hsync, vsync, red, green, blue, pwm);
+module top_module (reset, pixel_clk, ps2clk, ps2data, hsync, vsync, red, green, blue, pwm);
 
-     input reset, clk, ps2clk, ps2data;
+     input reset, pixel_clk, ps2clk, ps2data;
      output hsync, vsync, pwm;
-     output [2:0] red, green, blue;
+     output red, green, blue;
 
      wire [34:0] data;
 	wire [10:0] high_frequency_pwm_counter;
      wire [7:0] scancode, address;
      wire [2:0] note;
-     wire valid, pixel_clk, pwm_clk, line_placement, display_area;
+     wire valid, pwm_clk, line_placement, display_area;
      wire high_frequency_pwm_enable;
      wire note_serial_out;
 
-     // Timing-related instantiations, where the initial FPGA clk frequency is considered to be 100MHz
-     cnt4 pixel_generator (reset, clk, 1'b1, pixel_clk);
-     cnt25 pwm_drive_clock (reset, clk, pixel_clk, pwm_clk);
+     cnt25 pwm_drive_clock (reset, pixel_clk, 1'b1, pwm_clk);
 
      // Keyboard-related instantiations
      kbd_protocol_modified keyboard_protocol (reset, pixel_clk, ps2clk, ps2data, scancode, valid);
@@ -41,11 +39,11 @@ module top_module (reset, clk, ps2clk, ps2data, hsync, vsync, red, green, blue, 
      parallel_to_serial p2s (reset, pixel_clk, data, display_area, note_serial_out);
 
      // Audio-related instantiations
-     pwm_driver piezo_driver_module (reset, clk, pwm_clk, high_frequency_pwm_counter, high_frequency_pwm_enable, pwm);
+     pwm_driver piezo_driver_module (reset, pixel_clk, pwm_clk, high_frequency_pwm_counter, high_frequency_pwm_enable, pwm);
 
      // Replication operator to produce the RGB for display easily.
      // No need to carry 9 bits around before we reach the display
-     assign {red, green, blue} = {9{line_placement | note_serial_out}};
+     assign {red, green, blue} = {3{line_placement | note_serial_out}};
 
 
 endmodule
