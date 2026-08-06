@@ -30,7 +30,7 @@ module kbd_protocol_modified (reset, clk, ps2clk, ps2data, scancode, valid);
 
      always @(posedge clk or posedge reset) begin
           if (reset) ps2clksamples <= 8'd0;
-          else ps2clksamples <= {ps2clksamples[7:0], ps2clk};
+          else ps2clksamples <= {ps2clksamples[6:0], ps2clk};
      end
 
      assign fall_edge = (ps2clksamples == 8'hF0);
