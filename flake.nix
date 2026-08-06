@@ -56,6 +56,7 @@
             extra-packages = with pkgs; [
               # Tools
               gnumake
+              bender
 
               # Simulation
               iverilog
