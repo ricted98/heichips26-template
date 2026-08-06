@@ -23,4 +23,3 @@ sources:
 - target: fpga
   files:
   - rtl/fpga_clk_div.v
-  - rtl/fpga_top_module.v
