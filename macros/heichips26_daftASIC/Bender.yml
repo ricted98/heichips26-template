@@ -6,16 +6,40 @@ dependencies:
   # common_cells: { git: "https://github.com/pulp-platform/common_cells.git", rev: v2.0.0-beta.3 }
 
 sources:
-- rtl/cnt25.v
-- rtl/cnt4.v
-- rtl/kbd_decoder.v
-- rtl/kbd_protocol_modified.v
-- rtl/note_memory.v
-- rtl/parallel_to_serial.v
-- rtl/pwm_driver.v
-- rtl/top_module.v
-- rtl/vga_protocol.v
-- rtl/heichips26_daftASIC.sv
+- cnt25.v
+- eighth_line_stem_down_rom.v
+- eighth_line_stem_up_rom.v
+- eighth_note_memory.v
+- eighth_space_stem_down_rom.v
+- eighth_space_stem_up_rom.v
+- fpga_clk_div.v
+- fpga_top_module.v
+- full_line_stem_down_rom.v
+- full_line_stem_up_rom.v
+- full_note_memory.v
+- full_space_stem_down_rom.v
+- full_space_stem_up_rom.v
+- half_line_stem_down_rom.v
+- half_line_stem_up_rom.v
+- half_note_memory.v
+- half_space_stem_down_rom.v
+- half_space_stem_up_rom.v
+- kbd_decoder.v
+- kbd_protocol_modified.v
+- note_memory.v
+- parallel_to_serial.v
+- pwm_driver.v
+- quarter_line_stem_down_rom.v
+- quarter_line_stem_up_rom.v
+- quarter_note_memory.v
+- quarter_space_stem_down_rom.v
+- quarter_space_stem_up_rom.v
+- sol_rom.v
+- top_module.v
+- vga_protocol.v
+
+# HeiChips top level
+- heichips26_daftASIC.sv
 
 - target: fpga
   files:
