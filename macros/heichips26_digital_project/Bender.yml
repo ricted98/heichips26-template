@@ -1,0 +1,16 @@
+package:
+  name: music_synth
+
+dependencies:
+  # Add any relevant dependency
+
+sources:
+- rtl/cnt25.v
+- rtl/cnt4.v
+- rtl/kbd_decoder.v
+- rtl/kbd_protocol_modified.v
+- rtl/note_memory.v
+- rtl/parallel_to_serial.v
+- rtl/pwm_driver.v
+- rtl/top_module.v
+- rtl/vga_protocol.v
