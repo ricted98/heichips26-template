@@ -256,6 +256,8 @@ clean: ## Delete all generated files and folders of the TOP cell (LibreLane outp
 	rm -rf final netlist
 	rm -rf $(REPORT_DIR)
 	rm -rf $(COCOTB_DIR)/sim_build $(VERILOG_TB_DIR)/*.fst
+	rm -rf .generated
+	rm -rf $(LIBRELANE_DIR)/.generated
 	@$(MAKE) -C fpga clean
 .PHONY: clean
 
