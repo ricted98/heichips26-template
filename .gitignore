@@ -49,3 +49,6 @@ IHP-Open-PDK/
 
 # KLayout
 klayoutrc.*
+
+# Bender checkouts
+.bender
