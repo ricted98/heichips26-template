@@ -86,6 +86,7 @@
             prjxray
             sv-elab
           ]) ++ (with nixpkgsFor.${system}; [
+            bender
             nextpnr-xilinx
             yosys
             ghdl
