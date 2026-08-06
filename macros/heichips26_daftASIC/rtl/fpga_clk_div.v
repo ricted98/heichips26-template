@@ -13,10 +13,10 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-module fpga_clk_div (reset, clk, pixel_clk);
+module fpga_clk_div (reset, clk, clk_out);
 
      input reset, clk;
-     output pixel_clk;
+     output clk_out;
 
      wire clk_25mhz_unbuffered;
 
@@ -40,7 +40,7 @@ module fpga_clk_div (reset, clk, pixel_clk);
 
      BUFG bufg_inst (
          .I(clk_25mhz_unbuffered),
-         .O(pixel_clk)
+         .O(clk_out)
      );
 
 
