@@ -14,5 +14,12 @@ sources:
 - rtl/pwm_driver.v
 - rtl/top_module.v
 - rtl/vga_protocol.v
-# Top level design
-- rtl/heichips26_daftASIC.sv
+
+- target: not(fpga)
+  files:
+  - rtl/heichips26_daftASIC.sv
+
+- target: fpga
+  files:
+  - rtl/fpga_clk_div.v
+  - rtl/fpga_top_module.v

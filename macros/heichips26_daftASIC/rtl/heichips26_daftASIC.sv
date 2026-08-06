@@ -21,12 +21,12 @@ module heichips26_daftASIC (
 );
 
     // VGA signals
-    logic [2:0] red, green, blue;
-    logic       hsync, vsync;
+    logic red, green, blue;
+    logic hsync, vsync;
     // PWM signals
-    logic       pwm;
+    logic pwm;
     // PS2 signals
-    logic       ps2clk, ps2data;
+    logic ps2clk, ps2data;
 
     // Inputs
     assign ps2clk  = ui_in[1];
@@ -34,30 +34,30 @@ module heichips26_daftASIC (
     // Outputs
     assign uo_out   [0] = hsync;
     assign uo_out   [1] = vsync;
-    assign uo_out[ 4:2] = red;
-    assign uo_out[ 7:5] = green;
+    assign uo_out   [2] = red;
+    assign uo_out   [3] = green;
+    assign uo_out   [4] = blue;
+    assign uo_out   [5] = pwm;
+    assign uo_out [7:6] = '0;
     // Bidir (force to outputs)
     assign uio_oe       = '1;
-    assign uio_out[2:0] = blue;
-    assign uio_out  [3] = pwm;
-    assign uio_out[7:4] = '0;
+    assign uio_out[7:0] = '0;
 
     // List all unused inputs to prevent warnings
     wire _unused;
     assign _unused = &{ena, ui_in[7:2], uio_in};
 
-
     top_module music_synth_i (
-        .clk     (clk),
-        .reset   (~rst_n),
-        .ps2clk  (ps2clk),
-        .ps2data (ps2data),
-        .hsync   (hsync),
-        .vsync   (vsync),
-        .red     (red),
-        .green   (green),
-        .blue    (blue),
-        .pwm     (pwm)
+        .pixel_clk (clk),
+        .reset     (~rst_n),
+        .ps2clk    (ps2clk),
+        .ps2data   (ps2data),
+        .hsync     (hsync),
+        .vsync     (vsync),
+        .red       (red),
+        .green     (green),
+        .blue      (blue),
+        .pwm       (pwm)
     );
 
 endmodule
