@@ -24,6 +24,8 @@ module top_module (reset, clk, ps2clk, ps2data, hsync, vsync, red, green, blue, 
      wire [7:0] scancode, address;
      wire [2:0] note;
      wire valid, pixel_clk, pwm_clk, line_placement, display_area;
+     wire high_frequency_pwm_enable;
+     wire note_serial_out;
 
      // Timing-related instantiations, where the initial FPGA clk frequency is considered to be 100MHz
      cnt4 pixel_generator (reset, clk, 1'b1, pixel_clk);
