@@ -23,10 +23,9 @@ module basys3_top (
 
     input  logic        PS2Clk,
     input  logic        PS2Data,
-    input  logic        pwm
 
     // Pmod JA
-    input logic [7:0] JA
+    output logic [7:0] JA
 );
 
     logic rst_n;

@@ -5,4 +5,4 @@
 
 SRC_DIR := ../../../rtl
 
-DUT_SRCS := bender script flist -t fpga
+DUT_SRCS := $(shell bender script flist -t fpga)

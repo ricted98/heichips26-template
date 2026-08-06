@@ -27,8 +27,7 @@ module fpga_clk_div (reset, clk, clk_out);
           .REF_JITTER1(0.010),
           .CLKIN1_PERIOD(10.0),       // 100 MHz input clock
           .CLKFBOUT_MULT(1),          // Multiply by 1 -> 100 MHz VCO
-          .CLKOUT0_DIVIDE(4),         // Divide by 4 -> 25 MHz output clock
-          .DUTY_CYCLE0(0.5)
+          .CLKOUT0_DIVIDE(4)          // Divide by 4 -> 25 MHz output clock
      ) pll_inst (
          .CLKIN1(clk),
          .CLKOUT0(clk_25mhz_unbuffered),

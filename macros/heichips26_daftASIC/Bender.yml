@@ -15,10 +15,7 @@ sources:
 - rtl/pwm_driver.v
 - rtl/top_module.v
 - rtl/vga_protocol.v
-
-- target: not(fpga)
-  files:
-  - rtl/heichips26_daftASIC.sv
+- rtl/heichips26_daftASIC.sv
 
 - target: fpga
   files:
