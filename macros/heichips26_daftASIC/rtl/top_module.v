@@ -109,7 +109,7 @@ module top_module (reset, pixel_clk, ps2clk, ps2data, hsync, vsync, red, green, 
      assign static_part = clef_placement | line_placement;
      always @(rgb_out or vibrato or staccato or line_placement or note_serial_out or note_display_area or clef_placement or static_part) begin
           if (note_display_area) begin
-               if (vibrato & staccato) rgb_out = (3'b110 & {3{note_serial_out}} == 3'b100) ? {3{static_part}} : 3'b110 & {3{note_serial_out}};
+               if (vibrato & staccato) rgb_out = (3'b110 & {3{note_serial_out}} == 3'b001) ? {3{static_part}} : 3'b110 & {3{note_serial_out}};
                else if (vibrato) rgb_out = (3'b101 & {3{note_serial_out}} == 3'b000) ? {3{static_part}} : 3'b101 & {3{note_serial_out}};
                else if (staccato) rgb_out = (3'b011 & {3{note_serial_out}} == 3'b000) ? {3{static_part}} : 3'b011 & {3{note_serial_out}};
                else rgb_out = (3'b111 & {3{note_serial_out}} == 3'b000) ? {3{static_part}} : {3{note_serial_out}};
