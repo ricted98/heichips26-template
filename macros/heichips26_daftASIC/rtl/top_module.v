@@ -112,7 +112,7 @@ module top_module (reset, pixel_clk, ps2clk, ps2data, hsync, vsync, red, green, 
                if (vibrato & staccato) rgb_out = (3'b110 & {3{note_serial_out}} == 3'b000) ? {3{static_part}} : 3'b110 & {3{note_serial_out}};
                else if (vibrato) rgb_out = (3'b101 & {3{note_serial_out}} == 3'b000) ? {3{static_part}} : 3'b101 & {3{note_serial_out}};
                else if (staccato) rgb_out = (3'b011 & {3{note_serial_out}} == 3'b000) ? {3{static_part}} : 3'b011 & {3{note_serial_out}};
-               else rgb_out = {3{note_serial_out}};
+               else rgb_out = (3'b111 & {3{note_serial_out}} == 3'b000) ? {3{static_part}} : {3{note_serial_out}};
           end
           else if (static_part) rgb_out = 3'b111;
           else rgb_out = 3'b000;
