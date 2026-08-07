@@ -10,26 +10,23 @@ team-members:
 - Riccardo Tedeschi
 slot-size: small # small, large, tiny
 analog-pins: 0 # 0-3, only for small or tiny projects
-short-description: This is a super cool project!
+short-description: An extensively, named daftASIC, designed and expandable music synthesizer built purely in silicon, supporting both visual and audio outputs
+
 # Please add the documentation about your project here.
 # Why did you choose to create it? How does it work? How can it be tested, etc.?
 # If your project requires additional external hardware, e.g. a USB port,
 # please mention this so we can consider it when designing the HeiChips PCB.
 long-description: |
-  Is this thing on?
+A music synthesizer built purely in silicon, daftASIC supports both visual and audio outputs. The music synthesizer designed supports
+PS/2 keyboard inputs, VGA output for the score and a PWM driver for the audio output. It supports multiple note durations (full, half, 
+quarter and eighth notes), as well as various effects (phaser, staccato). daftASIC can be extended to include an automatic melody input
+system for automatic reproduction of programmed melodies.
 
-  This is a super cool project 👏
+Features include:
+  - PWM-based waveform generator for audio production and effects
+  - VGA-based score viewer with dynamic placement of incoming notes and the current active effect
+  - PS/2-based keyboard input for user interaction with the system
+  - Character ROMs for the visuals of the score
 
-  * with
-  * bullet
-  * points
-
-  **nice** *formatting* and [links](https://heichips.github.io/).
-
-# These paths are used to verify your
-# submission during the precheck.
-# Wildcards are allowed, but there
-# should only be a single match.
-gds-path: macros/heichips26_daftASIC/final/gds/*.gds
-lef-path: macros/heichips26_daftASIC/final/lef/*.lef
-header-path: macros/heichips26_daftASIC/final/vh/*.vh
+  No external analog circuitry is required beyond the standard board connections, however some filtering and amplification
+  of the PWM signal could make the sounds produced more pleasant for some.
