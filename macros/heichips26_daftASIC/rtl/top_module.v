@@ -80,14 +80,16 @@ module top_module (reset, pixel_clk, ps2clk, ps2data, hsync, vsync, red, green, 
 
      // Audio-related instantiations
      pwm_driver piezo_driver_module (
-          reset,
-          pixel_clk,
-          pwm_clk,
-          high_frequency_pwm_counter,
-          high_frequency_pwm_enable,
-          vibrato,
-          staccato,
-          pwm
+          .reset                                                   (reset),
+          .clk                                                 (pixel_clk),
+          .enable                                                (pwm_clk),
+          .valid                                                   (valid),
+          .scancode                                             (scancode),
+          .high_frequency_pwm_counter_init    (high_frequency_pwm_counter),
+          .high_frequency_pwm_enable           (high_frequency_pwm_enable),
+          .vibrato                                               (vibrato),
+          .staccato                                             (staccato),
+          .pwm                                                       (pwm)
      );
 
      // Replication operator to produce the RGB for display easily.
