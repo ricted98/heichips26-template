@@ -16,6 +16,8 @@
 module pwm_driver (reset, clk, enable, valid, scancode, high_frequency_pwm_counter_init,
                    high_frequency_pwm_enable, vibrato, staccato, pwm);
 
+     parameter PWM_COUNTER_WIDTH = 16;
+
      // Frequencies for notes
      parameter C4 = 1908;
      parameter D4 = 1700;
@@ -65,18 +67,18 @@ module pwm_driver (reset, clk, enable, valid, scancode, high_frequency_pwm_count
 
      input reset, clk, enable, valid, high_frequency_pwm_enable, vibrato, staccato;
      input [7:0] scancode;
-     input [15:0] high_frequency_pwm_counter_init;
+     input [PWM_COUNTER_WIDTH-1:0] high_frequency_pwm_counter_init;
      output reg pwm;
 
      reg pwm_internal;
-     reg [15:0] period_counter;
-     reg [15:0] high_frequency_pwm_counter;
-     reg [15:0] step, bound_up, bound_down;
-     reg [15:0] stac_max_count, stac_counter;
+     reg [PWM_COUNTER_WIDTH-1:0] period_counter;
+     reg [PWM_COUNTER_WIDTH-1:0] high_frequency_pwm_counter;
+     reg [PWM_COUNTER_WIDTH-1:0] step, bound_up, bound_down;
+     reg [PWM_COUNTER_WIDTH-1:0] stac_max_count, stac_counter;
      reg [2:0] note_loaded;
      reg up_count, pwm_sample;
 
-     wire [15:0] vib_downwards, vib_upwards;
+     wire [PWM_COUNTER_WIDTH-1:0] vib_downwards, vib_upwards;
      wire pwm_rose, note_off;
 
 

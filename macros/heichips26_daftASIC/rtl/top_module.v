@@ -17,6 +17,7 @@ module top_module (reset, pixel_clk, ps2clk, ps2data, hsync, vsync, red, green, 
 
      localparam ROM_DATA_WIDTH = 32;
      localparam ROM_ADDR_WIDTH = 10;
+     localparam PWM_COUNTER_WIDTH = 16;
 
      input reset, pixel_clk, ps2clk, ps2data;
      output hsync, vsync, pwm;
@@ -26,7 +27,7 @@ module top_module (reset, pixel_clk, ps2clk, ps2data, hsync, vsync, red, green, 
 
      wire [ROM_DATA_WIDTH-1:0] data;
      wire [ROM_ADDR_WIDTH-1:0] address;
-	wire [10:0] high_frequency_pwm_counter;
+	wire [PWM_COUNTER_WIDTH-1:0] high_frequency_pwm_counter;
      wire [7:0] scancode;
      wire [2:0] note;
      wire valid, pwm_clk, line_placement, clef_placement, note_display_area;
