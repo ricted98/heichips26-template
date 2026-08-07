@@ -27,43 +27,43 @@ module pwm_driver (reset, clk, enable, valid, scancode, note_loaded, high_freque
      parameter A4 = 1136;
      parameter B4 = 1012;
 
-     localparam C4_VIB_STEP = 43;
+     localparam C4_VIB_STEP = 58;
      localparam C4_VIB_UP = C4 - 8*C4_VIB_STEP;
      localparam C4_VIB_DOWN = C4 + 8*C4_VIB_STEP;
 
-     localparam D4_VIB_STEP = 36;
+     localparam D4_VIB_STEP = 49;
      localparam D4_VIB_UP = D4 - 8*D4_VIB_STEP;
      localparam D4_VIB_DOWN = D4 + 8*D4_VIB_STEP;
 
-     localparam E4_VIB_STEP = 29;
+     localparam E4_VIB_STEP = 37;
      localparam E4_VIB_UP = E4 - 8*E4_VIB_STEP;
      localparam E4_VIB_DOWN = E4 + 8*E4_VIB_STEP;
 
-     localparam F4_VIB_STEP = 23;
+     localparam F4_VIB_STEP = 28;
      localparam F4_VIB_UP = F4 - 8*F4_VIB_STEP;
      localparam F4_VIB_DOWN = F4 + 8*F4_VIB_STEP;
 
-     localparam G4_VIB_STEP = 18;
+     localparam G4_VIB_STEP = 21;
      localparam G4_VIB_UP = G4 - 8*G4_VIB_STEP;
      localparam G4_VIB_DOWN = G4 + 8*G4_VIB_STEP;
 
-     localparam A4_VIB_STEP = 18;
+     localparam A4_VIB_STEP = 16;
      localparam A4_VIB_UP = A4 - 8*A4_VIB_STEP;
      localparam A4_VIB_DOWN = A4 + 8*A4_VIB_STEP;
 
-     localparam B4_VIB_STEP = 18;
+     localparam B4_VIB_STEP = 10;
      localparam B4_VIB_UP = B4 - 8*B4_VIB_STEP;
      localparam B4_VIB_DOWN = B4 + 8*B4_VIB_STEP;
 
      // Number of PWM periods to get staccato at roughly the same times,
      // but without having a massive cycle counter for the exact timing
-     localparam C4_STAC_MAX = 1571;
-     localparam D4_STAC_MAX = 1764;
-     localparam E4_STAC_MAX = 1979;
-     localparam F4_STAC_MAX = 2094;
-     localparam G4_STAC_MAX = 2352;
-     localparam A4_STAC_MAX = 2638;
-     localparam B4_STAC_MAX = 2963;
+     localparam C4_STAC_MAX = 393;
+     localparam D4_STAC_MAX = 441;
+     localparam E4_STAC_MAX = 495;
+     localparam F4_STAC_MAX = 523;
+     localparam G4_STAC_MAX = 588;
+     localparam A4_STAC_MAX = 660;
+     localparam B4_STAC_MAX = 741;
 
      input reset, clk, enable, valid, high_frequency_pwm_enable, vibrato, staccato;
      input [7:0] scancode;
