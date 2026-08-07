@@ -27,7 +27,7 @@ module kbd_decoder (reset, clk, valid, scancode, note, high_frequency_pwm_counte
      input [7:0] scancode;
 
      output reg [2:0] note;
-     output reg [10:0] high_frequency_pwm_counter_init;
+     output reg [15:0] high_frequency_pwm_counter_init;
      output reg high_frequency_pwm_enable;
      output reg vibrato, staccato;
 
@@ -37,20 +37,16 @@ module kbd_decoder (reset, clk, valid, scancode, note, high_frequency_pwm_counte
           if (reset) begin
                high_frequency_pwm_enable <= 0;
                note <= 0;
+               vibrato <= 1'b0;
+               staccato <= 1'b0;
           end
           else if (valid) begin
                case (scancode)
                     8'h16: begin                               // Character: 1
-                         vibrato <= 1'b0;
-                         staccato <= 1'b0;
+                         vibrato <= ~vibrato;
                     end
                     8'h1E: begin                               // Character: 2
-                         vibrato <= 1'b1;
-                         staccato <= 1'b0;
-                    end
-                    8'h26: begin                               // Character: 3
-                         vibrato <= 1'b0;
-                         staccato <= 1'b1;
+                         staccato <= ~staccato;
                     end
                     8'h76: begin                               // Character: Esc (no note played or displayed)
                          note <= 0;
