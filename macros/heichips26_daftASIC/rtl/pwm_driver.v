@@ -240,7 +240,7 @@ module pwm_driver (reset, clk, enable, valid, scancode, high_frequency_pwm_count
                     up_count <= 1'b1;
                end
                else if (vibrato & pwm_rose) begin
-                    high_frequency_pwm_counter <= (up_count & enable) ? vib_upwards : vib_downwards;
+                    high_frequency_pwm_counter <= (up_count) ? vib_upwards : vib_downwards;
                     if (high_frequency_pwm_counter == bound_up) up_count <= 1'b1;
                     else if (high_frequency_pwm_counter == bound_down) up_count <= 1'b0;
                end
