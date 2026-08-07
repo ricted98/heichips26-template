@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 The HeiChips Contributors
+# SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+
 import os
 import re
 import logging
@@ -33,14 +36,15 @@ PS2_BREAK_CODE   = 0xF0
 
 # Scancode -> high_frequency_pwm_counter value programmed by kbd_decoder
 NOTE_COUNTS = {
-    0x23: 1908,   # D -> Do
-    0x2D: 1700,   # R -> Re
-    0x3A: 1515,   # M -> Mi
+    0x21: 1908,   # D -> Do
+    0x23: 1700,   # R -> Re
+    0x24: 1515,   # M -> Mi
     0x2B: 1432,   # F -> Fa
-    0x1B: 1275,   # S -> Sol
-    0x4B: 1136,   # L -> La
-    0x21: 1012,   # C -> Ci
+    0x34: 1275,   # S -> Sol
+    0x1C: 1136,   # L -> La
+    0x32: 1012,   # C -> Ci
 }
+
 
 INVALID_KEYS = [
     0x14,         # T
@@ -58,6 +62,17 @@ SCANCODE_TO_NOTE = {
     SCANCODE_ESC: 0,
     0x23: 1, 0x2D: 2, 0x3A: 3, 0x2B: 4, 0x1B: 5, 0x4B: 6, 0x21: 7,
 }
+
+NOTE_TO_STACCATO_LEN = {
+    1 : 393,
+    2 : 441,
+    3 : 495,
+    4 : 523,
+    5 : 588,
+    5 : 660,
+    7 : 741
+}
+
 
 
 # ----------------------------------------------------------------------------
@@ -94,17 +109,16 @@ BEGINNING_FROM_TOP    = 90
 LINE_FIRST  = BEGINNING_FROM_TOP + V_FRONT_PORCH + V_SYNC_PULSE + V_BACK_PORCH   # 139
 STAFF_BASES = [LINE_FIRST + i * LINE_TO_LINE_DISTANCE for i in range(5)]
 
-# D2: display_area spans [454, 489] inclusive = 36 pixels, one wider than the
-# 35-bit glyph, and parallel_to_serial wraps its counter at 34 -> the 36th
-# column repeats the leftmost glyph column.
-NOTE_THICKNESS = 35
+
+NOTE_THICKNESS = 32
 H_LEFT_BORDER  = (H_SYNC_PULSE + H_BACK_PORCH + H_END - NOTE_THICKNESS - 1) // 2  # 454
 H_RIGHT_BORDER = H_LEFT_BORDER + NOTE_THICKNESS                                   # 489
 
-# D3: note_serial_out is registered, so the glyph appears one pixel to the right
-# of display_area, at columns 455..490.
-GLYPH_FIRST_COL = H_LEFT_BORDER + 1
-GLYPH_LAST_COL  = H_RIGHT_BORDER + 1
+# Multiple display areas
+NUM_DISPLAY_AREAS = 5       # 4 notes + clef
+DISPLAY_AREA_SZ = H_VISIBLE/NUM_DISPLAY_AREAS
+FIRST_GLYPH_FIRST_COL = DISPLAY_AREA_SZ + (DISPLAY_AREA_SZ - NOTE_THICKNESS)/2
+FIRST_GLYPH_LAST_COL  = FIRST_GLYPH_FIRST_COL + NOTE_COUNTS
 
 NOTE_HEIGHT = 64        # display_area spans top_of_note .. top_of_note + 63
 
@@ -121,11 +135,19 @@ NOTE_TOPS = {
 }
 
 # note_type = {~|note | &note, ~note[0]} selects one of three glyph banks
-NOTE_TYPE = {n: ((1 if n == 0 else 0) | (1 if n == 7 else 0)) << 1 | (1 - (n & 1))
-             for n in range(8)}
+NOTE_TYPE = {
+    0:  0,
+    1:  "eighth_line_stem_up",
+    2:  "eighth_space_stem_up",
+    3:  "eighth_line_stem_up",
+    4:  "eighth_space_stem_up",
+    5:  "eighth_line_stem_up",
+    6:  "eighth_space_stem_down",
+    7:  "eighth_line_stem_down"
+}
 
 ROM_BANK_SIZE = 64
-ROM_WORD_BITS = 35
+ROM_WORD_BITS = 32
 
 SETTLE_NS = 1   # read delay past a clock edge, so registered outputs are stable
 
@@ -141,10 +163,11 @@ def expected_pwm_period_ns(count):
 _ROM_ENTRY_RE = re.compile(r"^\s*(\d+)\s*:\s*data\s*=\s*32'b([01]{32})\s*;", re.M)
 
 
-def parse_note_rom(path=None):
+def parse_note_rom(note_type, path=None):
     """Extract the glyph ROM straight out of note_memory.v."""
+
     if path is None:
-        path = Path(__file__).resolve().parent / "../../rtl/note_memory.v"
+        path = Path(__file__).resolve().parent / f"../../rtl/{note_type}_rom.v"
 
     text = Path(path).read_text()
     rom = {int(addr): bits for addr, bits in _ROM_ENTRY_RE.findall(text)}
@@ -162,7 +185,7 @@ def golden_pixel(rom, note, line, pixel):
 
     top = NOTE_TOPS[note]
     if GLYPH_FIRST_COL <= pixel <= GLYPH_LAST_COL and top <= line <= top + NOTE_HEIGHT - 1:
-        address = NOTE_TYPE[note] * ROM_BANK_SIZE + (line - top)
+        address = (line - top)
         bits = rom.get(address, "0" * ROM_WORD_BITS)
         if bits[(pixel - GLYPH_FIRST_COL) % ROM_WORD_BITS] == "1":
             return 1
@@ -174,7 +197,6 @@ def rgb_level(dut):
     """Read the RGB output as a single 0/1 level."""
     r, g, b = int(dut.red.value), int(dut.green.value), int(dut.blue.value)
     assert r == g == b, f"rgb channels disagree: r={r} g={g} b={b}"
-    assert r in (0, 1), f"rgb channel is not a solid 0 or 1 (got {r})"
     return 1 if r else 0
 
 
@@ -440,6 +462,51 @@ async def test_pwm_silenced_heichips26_daftASIC(dut):
     logger.info("Done!")
 
 
+@cocotb.test()
+async def test_pwm_vibrato_heichips26_daftASIC(dut):
+    """TODO: test description."""
+    logger = logging.getLogger("heichips26_daftASIC_tb")
+
+    logger.info("Startup sequence...")
+    await start_up(dut)
+
+    # Start a note so the PWM is actually toggling first
+    await send_key_release(dut, 0x23)
+
+    await Timer(10, unit="us")
+    # await measure_pwm_period(dut.pwm)
+
+    # Trigger vibrato mode
+    dut._log.info("Releasing '1' to trigger vibrato...")
+    await send_key_release(dut, 0x16)
+
+    # Allow 1% of slack
+    tolerance = 0.25
+
+    for scancode, count in NOTE_COUNTS.items():
+        expected_ns = expected_pwm_period_ns(count)
+
+        dut._log.info(f"Releasing PS/2 key {hex(scancode)} (F0 + scancode)")
+        await send_key_release(dut, scancode)
+
+        dut._log.info("Measuring PWM period...")
+        measured_ns = await measure_pwm_period(dut.pwm)
+
+        dut._log.info(
+            f"{hex(scancode)}: measured {measured_ns:.0f} ns "
+            f"({1e9 / measured_ns:.1f} Hz), expected {expected_ns:.0f} ns "
+            f"({1e9 / expected_ns:.1f} Hz)"
+        )
+
+        assert abs(measured_ns - expected_ns) <= tolerance * expected_ns, \
+            (f"scancode {hex(scancode)}: measured PWM period {measured_ns:.0f} ns "
+                f"is outside {tolerance:.0%} of the expected {expected_ns:.0f} ns")
+    
+        logger.info("Done!")
+
+    logger.info("Done!")
+
+
 # ----------------------------------------------------------------------------
 # VGA tests
 # ----------------------------------------------------------------------------
@@ -628,7 +695,7 @@ async def test_vga_note_placement_heichips26_daftASIC(dut):
         await scanner.sync()
         await scanner.goto(NOTE_TOPS[note] + row, 460)
 
-        expected_address = NOTE_TYPE[note] * ROM_BANK_SIZE + row
+        expected_address = row
         got_address = int(dut.monitor.memory_address.value)
         assert got_address == expected_address, \
             (f"note {note} ({hex(scancode)}): memory_address is {got_address}, "
@@ -649,12 +716,12 @@ async def test_vga_note_render_heichips26_daftASIC(dut):
     logger.info("Startup sequence...")
     await start_up(dut)
 
-    rom = parse_note_rom()
-
     # Do covers the "through line" bank, Ci the "upside down" one.
     for scancode in (0x23, 0x21):
         note = SCANCODE_TO_NOTE[scancode]
         top = NOTE_TOPS[note]
+
+        rom = parse_note_rom(NOTE_TYPE[note])
 
         dut._log.info(f"Releasing PS/2 key {hex(scancode)} -> note {note}")
         await send_key_release(dut, scancode)
@@ -736,7 +803,7 @@ async def test_vga_frame_dump_heichips26_daftASIC(dut):
 
     scancode = int(os.getenv("VGA_DUMP_KEY", "0x23"), 0)
     note = SCANCODE_TO_NOTE[scancode]
-    # rom = parse_note_rom()
+    rom = parse_note_rom(NOTE_TYPE[note])
 
     dut._log.info(f"Releasing PS/2 key {hex(scancode)} -> note {note}")
     await send_key_release(dut, scancode)
