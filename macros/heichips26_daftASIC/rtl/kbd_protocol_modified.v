@@ -40,7 +40,6 @@ module kbd_protocol_modified (reset, clk, ps2clk, ps2data, scancode, valid);
      // previous read value of the package was F0, that is, we only
      // trace when a button is released, NOT when it is pressed
      always @(posedge reset or posedge clk) begin
-          valid <= 1'b0;      // This register will go to 1 for exactly one clock cycle ever
           if (reset) begin
                cnt <= 4'd0;
                scancode <= 8'b0;
@@ -67,6 +66,8 @@ module kbd_protocol_modified (reset, clk, ps2clk, ps2data, scancode, valid);
                     shift <= {ps2data, shift[9:1]};
                     cnt <= cnt + 1;
                end
+          end else begin
+               valid <= 1'b0;      // This register will go to 1 for exactly one clock cycle ever
           end
      end
 
