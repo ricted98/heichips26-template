@@ -75,16 +75,17 @@ module pwm_driver (reset, clk, enable, valid, scancode, note_loaded, high_freque
      reg [PWM_COUNTER_WIDTH-1:0] high_frequency_pwm_counter;
      reg [PWM_COUNTER_WIDTH-1:0] step, bound_up, bound_down;
      reg [PWM_COUNTER_WIDTH-1:0] stac_max_count, stac_counter;
-     reg up_count, pwm_sample, pwm_internal, valid_delayed;
+     reg up_count, pwm_sample, pwm_internal, valid_pending;
 
      wire [PWM_COUNTER_WIDTH-1:0] vib_downwards, vib_upwards;
      wire pwm_rose;
 
-     always @(posedge reset or posedge clk) begin
-          if (reset) valid_delayed <= 1'b0;
-          else valid_delayed <= valid;
-     end
 
+     always @(posedge reset or posedge clk) begin
+          if (reset) valid_pending <= 1'b0;
+          else if (valid) valid_pending <= 1'b1;
+          else if (enable & valid_pending) valid_pending <= 1'b0;
+     end
 
      // Vibrato steps / bounds and staccato cut lengths
      always @(note_loaded or step or bound_up or bound_down) begin
@@ -174,19 +175,25 @@ module pwm_driver (reset, clk, enable, valid, scancode, note_loaded, high_freque
 
      // Vibrato logic
      always @(posedge reset or posedge clk) begin
-          if (reset) begin
-               high_frequency_pwm_counter <= 0;
-               up_count <= 1'b1;
-          end
+          if (reset) high_frequency_pwm_counter <= 0;
           else if (enable) begin
-               if (valid_delayed) high_frequency_pwm_counter <= high_frequency_pwm_counter_init;
+               if (valid_pending) high_frequency_pwm_counter <= high_frequency_pwm_counter_init;
                else if (high_frequency_pwm_enable) begin
                     if (vibrato) begin
                          if (pwm_rose) begin
                               high_frequency_pwm_counter <= (up_count) ? vib_upwards : vib_downwards;
                          end
                     end
+                    else high_frequency_pwm_counter <= high_frequency_pwm_counter;
                end
+          end
+     end
+
+     always @(posedge reset or posedge clk) begin
+          if (reset) up_count <= 1'b1;
+          else begin
+               if (high_frequency_pwm_counter == bound_up) up_count <= 1'b1;
+               else if (high_frequency_pwm_counter == bound_down) up_count <= 1'b0;
           end
      end
 
@@ -195,7 +202,7 @@ module pwm_driver (reset, clk, enable, valid, scancode, note_loaded, high_freque
      always @(posedge reset or posedge clk) begin
           if (reset) stac_counter <= 0;
           else if (enable) begin
-               if (valid_delayed) stac_counter <= 0;
+               if (valid_pending) stac_counter <= 0;
                else if (high_frequency_pwm_enable) begin
                     if (staccato) begin
                          if (pwm_rose) begin
