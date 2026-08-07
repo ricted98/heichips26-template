@@ -208,9 +208,9 @@ module pwm_driver (reset, clk, enable, valid, scancode, high_frequency_pwm_count
                up_count <= 1'b1;
           end
           else if (enable) begin
-               if (high_frequency_pwm_enable) begin
-                    if (valid) high_frequency_pwm_counter <= high_frequency_pwm_counter_init;
-                    else if (vibrato) begin
+               if (valid) high_frequency_pwm_counter <= high_frequency_pwm_counter_init;
+               else if (high_frequency_pwm_enable) begin
+                    if (vibrato) begin
                          if (pwm_rose) begin
                               high_frequency_pwm_counter <= (up_count) ? vib_upwards : vib_downwards;
                          end
@@ -224,9 +224,9 @@ module pwm_driver (reset, clk, enable, valid, scancode, high_frequency_pwm_count
      always @(posedge reset or posedge clk) begin
           if (reset) stac_counter <= 0;
           else if (enable) begin
-               if (high_frequency_pwm_enable) begin
-                    if (valid) stac_counter <= 0;
-                    else if (staccato) begin
+               if (valid) stac_counter <= 0;
+               else if (high_frequency_pwm_enable) begin
+                    if (staccato) begin
                          if (pwm_rose) begin
                               stac_counter <= (cut_audio) ? stac_counter : stac_counter + 1;
                          end
