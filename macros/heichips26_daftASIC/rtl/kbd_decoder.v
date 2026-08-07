@@ -23,6 +23,28 @@ module kbd_decoder (reset, clk, valid, scancode, note, high_frequency_pwm_counte
      parameter A4 = 1136;
      parameter B4 = 1012;
 
+     `ifdef SOLFEGE
+
+          `define C_NOTE_BUTTON 8'h23 // Do
+          `define D_NOTE_BUTTON 8'h2D // Re
+          `define E_NOTE_BUTTON 8'h3A // Mi
+          `define F_NOTE_BUTTON 8'h2B // Fa
+          `define G_NOTE_BUTTON 8'h1B // Sol
+          `define A_NOTE_BUTTON 8'h4B // La
+          `define B_NOTE_BUTTON 8'h21 // Si
+
+     `else
+
+          `define C_NOTE_BUTTON 8'h21
+          `define D_NOTE_BUTTON 8'h23
+          `define E_NOTE_BUTTON 8'h24
+          `define F_NOTE_BUTTON 8'h2b
+          `define G_NOTE_BUTTON 8'h34
+          `define A_NOTE_BUTTON 8'h1c
+          `define B_NOTE_BUTTON 8'h32
+
+     `endif
+
      input reset, clk, valid;
      input [7:0] scancode;
 
@@ -54,37 +76,37 @@ module kbd_decoder (reset, clk, valid, scancode, note, high_frequency_pwm_counte
                          high_frequency_pwm_enable <= 0;
                          high_frequency_pwm_counter_init <= 0;
                     end
-                    8'h23: begin                               // Character: D (Do)
+                    `C_NOTE_BUTTON: begin                               // Character: D (Do)
                          high_frequency_pwm_enable <= 1;
                          high_frequency_pwm_counter_init <= C4;
                          note <= 1;
                     end
-                    8'h2D: begin                               // Character: R (Re)
+                    `D_NOTE_BUTTON: begin                               // Character: R (Re)
                          high_frequency_pwm_enable <= 1;
                          high_frequency_pwm_counter_init <= D4;
                          note <= 2;
                     end
-                    8'h3A: begin                               // Character: M (Mi)
+                    `E_NOTE_BUTTON: begin                               // Character: M (Mi)
                          high_frequency_pwm_enable <= 1;
                          high_frequency_pwm_counter_init <= E4;
                          note <= 3;
                     end
-                    8'h2B: begin                               // Character: F (Fa)
+                    `F_NOTE_BUTTON: begin                               // Character: F (Fa)
                          high_frequency_pwm_enable <= 1;
                          high_frequency_pwm_counter_init <= F4;
                          note <= 4;
                     end
-                    8'h1B: begin                               // Character: S (Sol)
+                    `G_NOTE_BUTTON: begin                               // Character: S (Sol)
                          high_frequency_pwm_enable <= 1;
                          high_frequency_pwm_counter_init <= G4;
                          note <= 5;
                     end
-                    8'h4B: begin                               // Character: L (La)
+                    `A_NOTE_BUTTON: begin                               // Character: L (La)
                          high_frequency_pwm_enable <= 1;
                          high_frequency_pwm_counter_init <= A4;
                          note <= 6;
                     end
-                    8'h21: begin                               // Character: C (Ci)
+                    `B_NOTE_BUTTON: begin                               // Character: C (Ci)
                          high_frequency_pwm_enable <= 1;
                          high_frequency_pwm_counter_init <= B4;
                          note <= 7;
