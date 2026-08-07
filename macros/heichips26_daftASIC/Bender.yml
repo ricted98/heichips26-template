@@ -7,14 +7,39 @@ dependencies:
 
 sources:
 - rtl/cnt25.v
-- rtl/cnt4.v
+- rtl/eighth_line_stem_down_rom.v
+- rtl/eighth_line_stem_up_rom.v
+- rtl/eighth_note_memory.v
+- rtl/eighth_space_stem_down_rom.v
+- rtl/eighth_space_stem_up_rom.v
+- rtl/fifo_shift.sv
+- rtl/fpga_clk_div.v
+- rtl/fpga_top_module.v
+- rtl/full_line_stem_down_rom.v
+- rtl/full_line_stem_up_rom.v
+- rtl/full_note_memory.v
+- rtl/full_space_stem_down_rom.v
+- rtl/full_space_stem_up_rom.v
+- rtl/half_line_stem_down_rom.v
+- rtl/half_line_stem_up_rom.v
+- rtl/half_note_memory.v
+- rtl/half_space_stem_down_rom.v
+- rtl/half_space_stem_up_rom.v
 - rtl/kbd_decoder.v
 - rtl/kbd_protocol_modified.v
 - rtl/note_memory.v
 - rtl/parallel_to_serial.v
 - rtl/pwm_driver.v
+- rtl/quarter_line_stem_down_rom.v
+- rtl/quarter_line_stem_up_rom.v
+- rtl/quarter_note_memory.v
+- rtl/quarter_space_stem_down_rom.v
+- rtl/quarter_space_stem_up_rom.v
+- rtl/sol_rom.v
 - rtl/top_module.v
 - rtl/vga_protocol.v
+
+# HeiChips top level
 - rtl/heichips26_daftASIC.sv
 
 - target: fpga

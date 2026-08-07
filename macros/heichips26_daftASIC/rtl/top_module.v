@@ -15,35 +15,117 @@
 
 module top_module (reset, pixel_clk, ps2clk, ps2data, hsync, vsync, red, green, blue, pwm);
 
+     localparam ROM_DATA_WIDTH = 32;
+     localparam ROM_ADDR_WIDTH = 10;
+     localparam PWM_COUNTER_WIDTH = 16;
+
      input reset, pixel_clk, ps2clk, ps2data;
      output hsync, vsync, pwm;
      output red, green, blue;
 
-     wire [34:0] data;
-	wire [10:0] high_frequency_pwm_counter;
-     wire [7:0] scancode, address;
+     reg [2:0] rgb_out;
+
+     wire [ROM_DATA_WIDTH-1:0] data;
+     wire [ROM_ADDR_WIDTH-1:0] address;
+	wire [PWM_COUNTER_WIDTH-1:0] high_frequency_pwm_counter;
+     wire [7:0] scancode;
      wire [2:0] note;
-     wire valid, pwm_clk, line_placement, display_area;
+     wire valid, pwm_clk, line_placement, clef_placement, note_display_area;
      wire high_frequency_pwm_enable;
      wire note_serial_out;
+     wire vibrato, staccato, last_display;
+     wire is_effect;
 
      cnt25 pwm_drive_clock (reset, pixel_clk, 1'b1, pwm_clk);
 
      // Keyboard-related instantiations
      kbd_protocol_modified keyboard_protocol (reset, pixel_clk, ps2clk, ps2data, scancode, valid);
-     kbd_decoder scan_decode (reset, pixel_clk, valid, scancode, note, high_frequency_pwm_counter, high_frequency_pwm_enable);
+     kbd_decoder scan_decode (
+          reset,
+          pixel_clk,
+          valid,
+          scancode,
+          note,
+          high_frequency_pwm_counter,
+          high_frequency_pwm_enable,
+          vibrato,
+          staccato,
+          is_effect
+     );
+
+     reg note_valid;
+
+     always @(posedge pixel_clk or posedge reset) begin
+          if (reset) note_valid <= 1'b0;
+          else       note_valid <= valid;
+     end
 
      // Display-related instantiations
-     vga_protocol monitor (reset, pixel_clk, note, hsync, vsync, line_placement, display_area, address);
+     vga_protocol #(
+          .ROM_DATA_WIDTH (ROM_DATA_WIDTH),
+          .ROM_ADDR_WIDTH (ROM_ADDR_WIDTH)
+     ) monitor (
+          .reset             (reset),
+          .clk               (pixel_clk),
+          .note              (note),
+          .note_valid        (note_valid),
+          .hsync             (hsync),
+          .vsync             (vsync),
+          .clef_placement    (clef_placement),
+          .line_placement    (line_placement),
+          .note_display_area (note_display_area),
+          .memory_address    (address),
+          .last_display      (last_display),
+          .is_effect         (is_effect)
+     );
+
 	note_memory memory (address, data);
-     parallel_to_serial p2s (reset, pixel_clk, data, display_area, note_serial_out);
+
+     parallel_to_serial #(
+          .ROM_DATA_WIDTH (ROM_DATA_WIDTH)
+     ) p2s (
+          reset,
+          pixel_clk,
+          data,
+          note_display_area,
+          note_serial_out
+     );
 
      // Audio-related instantiations
-     pwm_driver piezo_driver_module (reset, pixel_clk, pwm_clk, high_frequency_pwm_counter, high_frequency_pwm_enable, pwm);
+     pwm_driver piezo_driver_module (
+          .reset                                                   (reset),
+          .clk                                                 (pixel_clk),
+          .enable                                                (pwm_clk),
+          .valid                                                   (valid),
+          .scancode                                             (scancode),
+          .note_loaded                                              (note),
+          .high_frequency_pwm_counter_init    (high_frequency_pwm_counter),
+          .high_frequency_pwm_enable           (high_frequency_pwm_enable),
+          .vibrato                                               (vibrato),
+          .staccato                                             (staccato),
+          .pwm                                                       (pwm)
+     );
 
      // Replication operator to produce the RGB for display easily.
      // No need to carry 9 bits around before we reach the display
-     assign {red, green, blue} = {3{line_placement | note_serial_out}};
+     // assign {red, green, blue} = {3{line_placement | note_serial_out | clef_placement}};
+     wire static_part;
+     assign static_part = clef_placement | line_placement;
+     always @(*) begin
+          if (note_display_area) begin
+               if (last_display) begin
+                    if (vibrato & staccato) rgb_out = ~note_serial_out ? {3{static_part}} : 3'b110 & {3{note_serial_out}};
+                    else if (vibrato) rgb_out = ~note_serial_out ? {3{static_part}} : 3'b101 & {3{note_serial_out}};
+                    else if (staccato) rgb_out = ~note_serial_out ? {3{static_part}} : 3'b011 & {3{note_serial_out}};
+                    else rgb_out = ~note_serial_out ? {3{static_part}} : {3{note_serial_out}};
+               end
+               else rgb_out = ~note_serial_out ? {3{static_part}} : {3{note_serial_out}};
+          end
+          else if (static_part) rgb_out = 3'b111;
+          else rgb_out = 3'b000;
+     end
+
+     assign {red, green, blue} = rgb_out;
 
 
 endmodule
