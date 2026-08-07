@@ -118,7 +118,7 @@ H_RIGHT_BORDER = H_LEFT_BORDER + NOTE_THICKNESS                                 
 NUM_DISPLAY_AREAS = 5       # 4 notes + clef
 DISPLAY_AREA_SZ = H_VISIBLE/NUM_DISPLAY_AREAS
 FIRST_GLYPH_FIRST_COL = DISPLAY_AREA_SZ + (DISPLAY_AREA_SZ - NOTE_THICKNESS)/2
-FIRST_GLYPH_LAST_COL  = FIRST_GLYPH_FIRST_COL + NOTE_COUNTS
+FIRST_GLYPH_LAST_COL  = FIRST_GLYPH_FIRST_COL + NOTE_THICKNESS
 
 NOTE_HEIGHT = 64        # display_area spans top_of_note .. top_of_note + 63
 
@@ -178,16 +178,17 @@ def parse_note_rom(note_type, path=None):
 
 def golden_pixel(rom, note, line, pixel):
     """Expected RGB level (0/1) at a given position, per the RTL's behaviour."""
+    # TODO: predictions for all four display areas
     if H_VIS_FIRST <= pixel <= H_VIS_LAST:
         for base in STAFF_BASES:
             if base + 1 <= line <= base + LINE_THICKNESS:
                 return 1
 
     top = NOTE_TOPS[note]
-    if GLYPH_FIRST_COL <= pixel <= GLYPH_LAST_COL and top <= line <= top + NOTE_HEIGHT - 1:
+    if FIRST_GLYPH_FIRST_COL <= pixel <= FIRST_GLYPH_LAST_COL and top <= line <= top + NOTE_HEIGHT - 1:
         address = (line - top)
         bits = rom.get(address, "0" * ROM_WORD_BITS)
-        if bits[(pixel - GLYPH_FIRST_COL) % ROM_WORD_BITS] == "1":
+        if bits[(pixel - FIRST_GLYPH_FIRST_COL) % ROM_WORD_BITS] == "1":
             return 1
 
     return 0
@@ -729,7 +730,7 @@ async def test_vga_note_render_heichips26_daftASIC(dut):
         scanner = VgaScanner(dut)
         await scanner.sync()
 
-        first_col, last_col = GLYPH_FIRST_COL - 3, GLYPH_LAST_COL + 2
+        first_col, last_col = FIRST_GLYPH_FIRST_COL - 3, FIRST_GLYPH_LAST_COL + 2
         mismatches = []
 
         for line in range(top - 2, top + NOTE_HEIGHT + 2):
