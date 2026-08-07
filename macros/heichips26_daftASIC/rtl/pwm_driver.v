@@ -55,37 +55,27 @@ module pwm_driver (reset, clk, enable, valid, scancode, high_frequency_pwm_count
      localparam B4_VIB_UP = B4 - 8*B4_VIB_STEP;
      localparam B4_VIB_DOWN = B4 + 8*B4_VIB_STEP;
 
-     // Number of PWM periods to get staccato at roughly the same times,
-     // but without having a massive cycle counter for the exact timing
-     localparam C4_STAC_MAX = 1571;
-     localparam D4_STAC_MAX = 1764;
-     localparam E4_STAC_MAX = 1979;
-     localparam F4_STAC_MAX = 2094;
-     localparam G4_STAC_MAX = 2352;
-     localparam A4_STAC_MAX = 2638;
-     localparam B4_STAC_MAX = 2963;
-
      input reset, clk, enable, valid, high_frequency_pwm_enable, vibrato, staccato;
      input [7:0] scancode;
      input [PWM_COUNTER_WIDTH-1:0] high_frequency_pwm_counter_init;
-     output reg pwm;
+     output pwm;
 
-     reg pwm_internal;
      reg [PWM_COUNTER_WIDTH-1:0] period_counter;
      reg [PWM_COUNTER_WIDTH-1:0] high_frequency_pwm_counter;
      reg [PWM_COUNTER_WIDTH-1:0] step, bound_up, bound_down;
      reg [PWM_COUNTER_WIDTH-1:0] stac_max_count, stac_counter;
      reg [2:0] note_loaded;
-     reg up_count, pwm_sample;
+     reg up_count, pwm_sample, pwm_internal;
 
      wire [PWM_COUNTER_WIDTH-1:0] vib_downwards, vib_upwards;
-     wire pwm_rose, note_off;
+     wire pwm_rose;
+
 
      // Type of note loaded will decide the boundaries
      // of oscillation and the central frequency
      always @(posedge reset or posedge clk) begin
           if (reset) note_loaded <= 0;
-          else if (enable & valid) begin
+          else if (valid) begin
                case(scancode)
                     8'h23: begin                               // Character: D (Do)
                          note_loaded <= 1;
@@ -116,61 +106,52 @@ module pwm_driver (reset, clk, enable, valid, scancode, high_frequency_pwm_count
      end
 
      // Vibrato steps / bounds and staccato cut lengths
-     always @(note_loaded or step or bound_up or bound_down or stac_max_count) begin
+     always @(note_loaded or step or bound_up or bound_down) begin
           case (note_loaded)
                0: begin
                     step = 0;
                     bound_up = 0;
                     bound_down = 0;
-                    stac_max_count = 0;
                end
                1: begin
                     step = C4_VIB_STEP;
                     bound_up = C4_VIB_UP;
                     bound_down = C4_VIB_DOWN;
-                    stac_max_count = C4_STAC_MAX;
                end
                2: begin
                     step = D4_VIB_STEP;
                     bound_up = D4_VIB_UP;
                     bound_down = D4_VIB_DOWN;
-                    stac_max_count = D4_STAC_MAX;
                end
                3: begin
                     step = E4_VIB_STEP;
                     bound_up = E4_VIB_UP;
                     bound_down = E4_VIB_DOWN;
-                    stac_max_count = E4_STAC_MAX;
                end
                4: begin
                     step = F4_VIB_STEP;
                     bound_up = F4_VIB_UP;
                     bound_down = F4_VIB_DOWN;
-                    stac_max_count = F4_STAC_MAX;
                end
                5: begin
                     step = G4_VIB_STEP;
                     bound_up = G4_VIB_UP;
                     bound_down = G4_VIB_DOWN;
-                    stac_max_count = G4_STAC_MAX;
                end
                6: begin
                     step = A4_VIB_STEP;
                     bound_up = A4_VIB_UP;
                     bound_down = A4_VIB_DOWN;
-                    stac_max_count = A4_STAC_MAX;
                end
                7: begin
                     step = B4_VIB_STEP;
                     bound_up = B4_VIB_UP;
                     bound_down = B4_VIB_DOWN;
-                    stac_max_count = B4_STAC_MAX;
                end
                default: begin
                     step = 0;
                     bound_up = 0;
                     bound_down = 0;
-                    stac_max_count = 0;
                end
           endcase
      end
@@ -178,10 +159,6 @@ module pwm_driver (reset, clk, enable, valid, scancode, high_frequency_pwm_count
      // Adder and subtractor to implement the according oscillation for vibrato
      assign vib_downwards = high_frequency_pwm_counter - step;
      assign vib_upwards = high_frequency_pwm_counter + step;
-
-     // Single cycle per PWM period to time vibrato oscillation step, and re-used to
-     // count PWM transisitons for staccato
-     assign pwm_rose = ~pwm_sample & pwm_internal;
 
      // Create output pulse
      always @(posedge reset or posedge clk) begin
@@ -202,50 +179,27 @@ module pwm_driver (reset, clk, enable, valid, scancode, high_frequency_pwm_count
           end
      end
 
-     always @(posedge reset or posedge clk) begin
-          if (reset) pwm <= 1'b0;
-          else if (enable) begin
-               if (high_frequency_pwm_enable) begin
-                    if (note_off) pwm <= 1'b0;
-                    else pwm <= pwm_internal;
-               end
-          end
-     end
+     assign pwm_rose = ~pwm_sample & pwm_internal;
 
-     // assign note_off = (stac_counter == stac_max_count);
-     assign note_off = 1'b0;
-
-     // Count PWM periods since the last valid pulse for staccato,
-     // and saturate at the end to mute the output
-     always @(posedge reset or posedge clk) begin
-          if (reset) stac_counter <= 0;
-          else if (enable) begin
-               if (valid) stac_counter <= 0;
-               else if (staccato & pwm_rose) begin
-                    if (note_off) stac_counter <= stac_counter;
-                    else stac_counter <= stac_counter + 1;
-               end
-          end
-     end
-
-     // Vibrato oscillation frequency register
+     // Vibrato logic
      always @(posedge reset or posedge clk) begin
           if (reset) begin
                high_frequency_pwm_counter <= 0;
                up_count <= 1'b1;
           end
-          else begin
-               if (valid) begin         // New button press, so (re-)load count etc
-                    high_frequency_pwm_counter <= high_frequency_pwm_counter_init;
-                    up_count <= 1'b1;
-               end
-               else if (vibrato & pwm_rose) begin
-                    high_frequency_pwm_counter <= (up_count) ? vib_upwards : vib_downwards;
-                    if (high_frequency_pwm_counter == bound_up) up_count <= 1'b1;
-                    else if (high_frequency_pwm_counter == bound_down) up_count <= 1'b0;
+          else if (enable) begin
+               if (high_frequency_pwm_enable) begin
+                    if (valid) high_frequency_pwm_counter <= high_frequency_pwm_counter_init;
+                    else if (vibrato) begin
+                         if (pwm_rose) begin
+                              high_frequency_pwm_counter <= (up_count) ? vib_upwards : vib_downwards;
+                         end
+                    end
                end
           end
      end
+
+     assign pwm = pwm_internal;
 
 
 endmodule
