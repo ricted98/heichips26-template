@@ -108,7 +108,7 @@ module top_module (reset, pixel_clk, ps2clk, ps2data, hsync, vsync, red, green, 
      // assign {red, green, blue} = {3{line_placement | note_serial_out | clef_placement}};
      wire static_part;
      assign static_part = clef_placement | line_placement;
-     always @(rgb_out or vibrato or staccato or line_placement or note_serial_out or note_display_area or clef_placement or static_part) begin
+     always @(rgb_out or vibrato or staccato or last_display or line_placement or note_serial_out or note_display_area or clef_placement or static_part) begin
           if (note_display_area) begin
                if (last_display) begin
                     if (vibrato & staccato) rgb_out = ~note_serial_out ? {3{static_part}} : 3'b110 & {3{note_serial_out}};
