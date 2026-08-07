@@ -74,10 +74,10 @@ module pwm_driver (reset, clk, enable, valid, scancode, high_frequency_pwm_count
      reg [15:0] step, bound_up, bound_down;
      reg [15:0] stac_max_count, stac_counter;
      reg [2:0] note_loaded;
-     reg up_count, pwm_sample, note_off;
+     reg up_count, pwm_sample;
 
      wire [15:0] vib_downwards, vib_upwards;
-     wire pwm_rose;
+     wire pwm_rose, note_off;
 
 
      // Type of note loaded will decide the boundaries
@@ -188,12 +188,10 @@ module pwm_driver (reset, clk, enable, valid, scancode, high_frequency_pwm_count
                pwm_internal <= 0;
                period_counter <= 0;
                pwm_sample <= 1'b0;
-               pwm <= 1'b0;
           end
           else if (enable) begin
                if (high_frequency_pwm_enable) begin
                     pwm_sample <= pwm_internal;
-                    pwm <= pwm_internal & ~note_off;        // Staccato mutes the output pin only to avoid re-syncing other modes
                     if (period_counter == high_frequency_pwm_counter) begin
                          pwm_internal <= ~pwm_internal;
                          period_counter <= 0;
@@ -203,20 +201,26 @@ module pwm_driver (reset, clk, enable, valid, scancode, high_frequency_pwm_count
           end
      end
 
+     always @(posedge reset or posedge clk) begin
+          if (reset) pwm <= 1'b0;
+          else if (enable) begin
+               if (high_frequency_pwm_enable) begin
+                    if (note_off) pwm <= 1'b0;
+                    else pwm <= pwm_internal;
+               end
+          end
+     end
+
+     assign note_off = (stac_counter == stac_max_count);
+
      // Count PWM periods since the last valid pulse for staccato,
      // and saturate at the end to mute the output
      always @(posedge reset or posedge clk) begin
-          if (reset) begin
-               stac_counter <= 0;
-               note_off <= 1'b0;
-          end
+          if (reset) stac_counter <= 0;
           else if (enable) begin
-               if (valid) begin
-                    stac_counter <= 0;
-                    note_off <= 1'b0;
-               end
-               else if (staccato & pwm_rose & ~note_off) begin
-                    if (stac_counter == stac_max_count) note_off <= 1'b1;
+               if (valid) stac_counter <= 0;
+               else if (staccato & pwm_rose) begin
+                    if (note_off) stac_counter <= stac_counter;
                     else stac_counter <= stac_counter + 1;
                end
           end
