@@ -75,7 +75,6 @@ module pwm_driver (reset, clk, enable, valid, scancode, note_loaded, high_freque
      reg [PWM_COUNTER_WIDTH-1:0] high_frequency_pwm_counter;
      reg [PWM_COUNTER_WIDTH-1:0] step, bound_up, bound_down;
      reg [PWM_COUNTER_WIDTH-1:0] stac_max_count, stac_counter;
-     reg [2:0] note_loaded;
      reg up_count, pwm_sample, pwm_internal, valid_delayed;
 
      wire [PWM_COUNTER_WIDTH-1:0] vib_downwards, vib_upwards;
