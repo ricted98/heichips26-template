@@ -26,7 +26,9 @@ sources:
 - rtl/half_space_stem_up_rom.v
 - rtl/kbd_decoder.v
 - rtl/kbd_protocol_modified.v
+- rtl/note_fifo.v
 - rtl/note_memory.v
+- rtl/note_storage.v
 - rtl/parallel_to_serial.v
 - rtl/pwm_driver.v
 - rtl/quarter_line_stem_down_rom.v
