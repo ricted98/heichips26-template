@@ -13,7 +13,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-module vga_protocol (reset, clk, note, note_valid, hsync, vsync, line_placement, clef_placement, note_display_area, memory_address);
+module vga_protocol (reset, clk, note, note_valid, hsync, vsync, line_placement, clef_placement, note_display_area, memory_address, last_display);
 
      // Note memory ROM parameters
      parameter ROM_DATA_WIDTH = 32;
@@ -63,6 +63,7 @@ module vga_protocol (reset, clk, note, note_valid, hsync, vsync, line_placement,
      input       note_valid;
      output hsync, vsync, line_placement, clef_placement, note_display_area;
      output [ROM_ADDR_WIDTH-1:0] memory_address;
+     output last_display;
 
      reg [9:0] pixel_counter;
      reg [8:0] line_counter;
@@ -185,13 +186,14 @@ module vga_protocol (reset, clk, note, note_valid, hsync, vsync, line_placement,
           .N          (NUM_NOTE_DISPLAY_AREAS),
           .DATA_WIDTH ($bits(note))
      ) note_fifo_shift_i (
-          .clk_i   (clk),
-          .rst_i   (reset),
-          .push_i  (note_valid),
-          .data_i  (note),
-          .sel_i   (note_sel),
-          .data_o  (current_note),
-          .valid_o (current_note_is_valid)
+          .clk_i     (clk),
+          .rst_i     (reset),
+          .push_i    (note_valid),
+          .data_i    (note),
+          .sel_i     (note_sel),
+          .data_o    (current_note),
+          .valid_o   (current_note_is_valid),
+          .is_last_o (last_display)
      );
 
      assign current_display_area = visible_counter_q[9:9-DISPLAY_AREA_PTR_WIDTH+1];

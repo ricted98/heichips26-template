@@ -24,7 +24,8 @@ module fifo_shift #(
     input  logic [DATA_WIDTH-1:0] data_i,
     input  logic [PTR_WIDTH -1:0] sel_i,
     output logic [DATA_WIDTH-1:0] data_o,
-    output logic                  valid_o
+    output logic                  valid_o,
+    output logic                  is_last_o
 );
 
 enum logic { MODE_FIFO = 1'b0, MODE_SHIFT = 1'b1 } mode_d, mode_q;
@@ -77,5 +78,10 @@ end
 
 assign valid_o = valid_q[sel_i];
 assign data_o = data_array_q[sel_i];
+
+logic [N:0] padded_valid;
+
+assign padded_valid = {1'b0, valid_q};
+assign is_last_o    = padded_valid[sel_i+1:sel_i] == 2'b01;
 
 endmodule
