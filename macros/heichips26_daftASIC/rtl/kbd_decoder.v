@@ -20,8 +20,8 @@ module kbd_decoder (reset, clk, valid, scancode, note, high_frequency_pwm_counte
      parameter E4 = 1515;
      parameter F4 = 1432;
      parameter G4 = 1275;
-     parameter A5 = 1136;
-     parameter B5 = 1012;
+     parameter A4 = 1136;
+     parameter B4 = 1012;
 
      input reset, clk, valid;
      input [7:0] scancode;
@@ -36,6 +36,7 @@ module kbd_decoder (reset, clk, valid, scancode, note, high_frequency_pwm_counte
      always @(posedge reset or posedge clk) begin
           if (reset) begin
                high_frequency_pwm_enable <= 0;
+               high_frequency_pwm_counter_init <= 0;
                note <= 0;
                vibrato <= 1'b0;
                staccato <= 1'b0;
@@ -50,71 +51,52 @@ module kbd_decoder (reset, clk, valid, scancode, note, high_frequency_pwm_counte
                     end
                     8'h76: begin                               // Character: Esc (no note played or displayed)
                          note <= 0;
+                         high_frequency_pwm_enable <= 0;
+                         high_frequency_pwm_counter_init <= 0;
                     end
                     8'h23: begin                               // Character: D (Do)
                          high_frequency_pwm_enable <= 1;
+                         high_frequency_pwm_counter_init <= C4;
                          note <= 1;
                     end
                     8'h2D: begin                               // Character: R (Re)
                          high_frequency_pwm_enable <= 1;
+                         high_frequency_pwm_counter_init <= D4;
                          note <= 2;
                     end
                     8'h3A: begin                               // Character: M (Mi)
                          high_frequency_pwm_enable <= 1;
+                         high_frequency_pwm_counter_init <= E4;
                          note <= 3;
                     end
                     8'h2B: begin                               // Character: F (Fa)
                          high_frequency_pwm_enable <= 1;
+                         high_frequency_pwm_counter_init <= F4;
                          note <= 4;
                     end
                     8'h1B: begin                               // Character: S (Sol)
                          high_frequency_pwm_enable <= 1;
+                         high_frequency_pwm_counter_init <= G4;
                          note <= 5;
                     end
                     8'h4B: begin                               // Character: L (La)
                          high_frequency_pwm_enable <= 1;
+                         high_frequency_pwm_counter_init <= A4;
                          note <= 6;
                     end
                     8'h21: begin                               // Character: C (Ci)
                          high_frequency_pwm_enable <= 1;
+                         high_frequency_pwm_counter_init <= B4;
                          note <= 7;
                     end
                     default: begin                             // Holds display as is, cuts the sound
                          high_frequency_pwm_enable <= 0;
+                         high_frequency_pwm_counter_init <= 0;
                     end
                endcase
           end
      end
 
-     // Initial counter values are just combo-ed for 1 cycle basically
-     always @(scancode) begin
-          case (scancode)
-               8'h23: begin                               // Character: D (Do)
-                    high_frequency_pwm_counter_init = C4;
-               end
-               8'h2D: begin                               // Character: R (Re)
-                    high_frequency_pwm_counter_init = D4;
-               end
-               8'h3A: begin                               // Character: M (Mi)
-                    high_frequency_pwm_counter_init = E4;
-               end
-               8'h2B: begin                               // Character: F (Fa)
-                    high_frequency_pwm_counter_init = F4;
-               end
-               8'h1B: begin                               // Character: S (Sol)
-                    high_frequency_pwm_counter_init = G4;
-               end
-               8'h4B: begin                               // Character: L (La)
-                    high_frequency_pwm_counter_init = A5;
-               end
-               8'h21: begin                               // Character: C (Ci)
-                    high_frequency_pwm_counter_init = B5;
-               end
-               default: begin                             // Holds display as is, cuts the sound
-                    high_frequency_pwm_counter_init = 0;
-               end
-          endcase
-     end
 
 
 endmodule

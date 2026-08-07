@@ -13,7 +13,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-module pwm_driver (reset, clk, enable, valid, scancode, high_frequency_pwm_counter_init,
+module pwm_driver (reset, clk, enable, valid, scancode, note_loaded, high_frequency_pwm_counter_init,
                    high_frequency_pwm_enable, vibrato, staccato, pwm);
 
      parameter PWM_COUNTER_WIDTH = 16;
@@ -67,6 +67,7 @@ module pwm_driver (reset, clk, enable, valid, scancode, high_frequency_pwm_count
 
      input reset, clk, enable, valid, high_frequency_pwm_enable, vibrato, staccato;
      input [7:0] scancode;
+     input [2:0] note_loaded;
      input [PWM_COUNTER_WIDTH-1:0] high_frequency_pwm_counter_init;
      output pwm;
 
@@ -75,45 +76,16 @@ module pwm_driver (reset, clk, enable, valid, scancode, high_frequency_pwm_count
      reg [PWM_COUNTER_WIDTH-1:0] step, bound_up, bound_down;
      reg [PWM_COUNTER_WIDTH-1:0] stac_max_count, stac_counter;
      reg [2:0] note_loaded;
-     reg up_count, pwm_sample, pwm_internal;
+     reg up_count, pwm_sample, pwm_internal, valid_delayed;
 
      wire [PWM_COUNTER_WIDTH-1:0] vib_downwards, vib_upwards;
      wire pwm_rose;
 
-
-     // Type of note loaded will decide the boundaries
-     // of oscillation and the central frequency
      always @(posedge reset or posedge clk) begin
-          if (reset) note_loaded <= 0;
-          else if (valid) begin
-               case(scancode)
-                    8'h23: begin                               // Character: D (Do)
-                         note_loaded <= 1;
-                    end
-                    8'h2D: begin                               // Character: R (Re)
-                         note_loaded <= 2;
-                    end
-                    8'h3A: begin                               // Character: M (Mi)
-                         note_loaded <= 3;
-                    end
-                    8'h2B: begin                               // Character: F (Fa)
-                         note_loaded <= 4;
-                    end
-                    8'h1B: begin                               // Character: S (Sol)
-                         note_loaded <= 5;
-                    end
-                    8'h4B: begin                               // Character: L (La)
-                         note_loaded <= 6;
-                    end
-                    8'h21: begin                               // Character: C (Ci)
-                         note_loaded <= 7;
-                    end
-                    default: begin
-                         note_loaded <= 0;
-                    end
-               endcase
-          end
+          if (reset) valid_delayed <= 1'b0;
+          else valid_delayed <= valid;
      end
+
 
      // Vibrato steps / bounds and staccato cut lengths
      always @(note_loaded or step or bound_up or bound_down) begin
@@ -208,7 +180,7 @@ module pwm_driver (reset, clk, enable, valid, scancode, high_frequency_pwm_count
                up_count <= 1'b1;
           end
           else if (enable) begin
-               if (valid) high_frequency_pwm_counter <= high_frequency_pwm_counter_init;
+               if (valid_delayed) high_frequency_pwm_counter <= high_frequency_pwm_counter_init;
                else if (high_frequency_pwm_enable) begin
                     if (vibrato) begin
                          if (pwm_rose) begin
@@ -224,7 +196,7 @@ module pwm_driver (reset, clk, enable, valid, scancode, high_frequency_pwm_count
      always @(posedge reset or posedge clk) begin
           if (reset) stac_counter <= 0;
           else if (enable) begin
-               if (valid) stac_counter <= 0;
+               if (valid_delayed) stac_counter <= 0;
                else if (high_frequency_pwm_enable) begin
                     if (staccato) begin
                          if (pwm_rose) begin
