@@ -13,7 +13,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-module vga_protocol (reset, clk, note, note_valid, hsync, vsync, line_placement, clef_placement, note_display_area, memory_address, last_display);
+module vga_protocol (reset, clk, note, note_valid, hsync, vsync, line_placement, clef_placement, note_display_area, memory_address, last_display, is_effect);
 
      // Note memory ROM parameters
      parameter ROM_DATA_WIDTH = 32;
@@ -64,6 +64,7 @@ module vga_protocol (reset, clk, note, note_valid, hsync, vsync, line_placement,
      output hsync, vsync, line_placement, clef_placement, note_display_area;
      output [ROM_ADDR_WIDTH-1:0] memory_address;
      output last_display;
+     input  is_effect;
 
      reg [9:0] pixel_counter;
      reg [8:0] line_counter;
@@ -188,7 +189,7 @@ module vga_protocol (reset, clk, note, note_valid, hsync, vsync, line_placement,
      ) note_fifo_shift_i (
           .clk_i     (clk),
           .rst_i     (reset),
-          .push_i    (note_valid),
+          .push_i    (note_valid & !is_effect),
           .data_i    (note),
           .sel_i     (note_sel),
           .data_o    (current_note),

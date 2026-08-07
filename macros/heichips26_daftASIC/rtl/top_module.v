@@ -34,6 +34,7 @@ module top_module (reset, pixel_clk, ps2clk, ps2data, hsync, vsync, red, green, 
      wire high_frequency_pwm_enable;
      wire note_serial_out;
      wire vibrato, staccato, last_display;
+     wire is_effect;
 
      cnt25 pwm_drive_clock (reset, pixel_clk, 1'b1, pwm_clk);
 
@@ -48,7 +49,8 @@ module top_module (reset, pixel_clk, ps2clk, ps2data, hsync, vsync, red, green, 
           high_frequency_pwm_counter,
           high_frequency_pwm_enable,
           vibrato,
-          staccato
+          staccato,
+          is_effect
      );
 
      reg note_valid;
@@ -73,7 +75,8 @@ module top_module (reset, pixel_clk, ps2clk, ps2data, hsync, vsync, red, green, 
           .line_placement    (line_placement),
           .note_display_area (note_display_area),
           .memory_address    (address),
-          .last_display      (last_display)
+          .last_display      (last_display),
+          .is_effect         (is_effect)
      );
 
 	note_memory memory (address, data);

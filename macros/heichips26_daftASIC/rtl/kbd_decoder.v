@@ -13,7 +13,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-module kbd_decoder (reset, clk, valid, scancode, note, high_frequency_pwm_counter_init, high_frequency_pwm_enable, vibrato, staccato);
+module kbd_decoder (reset, clk, valid, scancode, note, high_frequency_pwm_counter_init, high_frequency_pwm_enable, vibrato, staccato, is_effect);
 
      parameter C4 = 1908;
      parameter D4 = 1700;
@@ -52,6 +52,7 @@ module kbd_decoder (reset, clk, valid, scancode, note, high_frequency_pwm_counte
      output reg [15:0] high_frequency_pwm_counter_init;
      output reg high_frequency_pwm_enable;
      output reg vibrato, staccato;
+     output reg is_effect;
 
 
      // Simple decoder based on the (valid) button pressed by the keyboard
@@ -62,59 +63,71 @@ module kbd_decoder (reset, clk, valid, scancode, note, high_frequency_pwm_counte
                note <= 0;
                vibrato <= 1'b0;
                staccato <= 1'b0;
+               is_effect <= 1'b0;
           end
           else if (valid) begin
                case (scancode)
                     8'h16: begin                               // Character: 1
                          vibrato <= ~vibrato;
+                         is_effect <= 1'b1;
                     end
                     8'h1E: begin                               // Character: 2
                          staccato <= ~staccato;
+                         is_effect <= 1'b1;
                     end
                     8'h76: begin                               // Character: Esc (no note played or displayed)
                          note <= 0;
                          high_frequency_pwm_enable <= 0;
                          high_frequency_pwm_counter_init <= 0;
+                         is_effect <= 1'b0;
                     end
                     `C_NOTE_BUTTON: begin                               // Character: D (Do)
                          high_frequency_pwm_enable <= 1;
                          high_frequency_pwm_counter_init <= C4;
                          note <= 1;
+                         is_effect <= 1'b0;
                     end
                     `D_NOTE_BUTTON: begin                               // Character: R (Re)
                          high_frequency_pwm_enable <= 1;
                          high_frequency_pwm_counter_init <= D4;
                          note <= 2;
+                         is_effect <= 1'b0;
                     end
                     `E_NOTE_BUTTON: begin                               // Character: M (Mi)
                          high_frequency_pwm_enable <= 1;
                          high_frequency_pwm_counter_init <= E4;
                          note <= 3;
+                         is_effect <= 1'b0;
                     end
                     `F_NOTE_BUTTON: begin                               // Character: F (Fa)
                          high_frequency_pwm_enable <= 1;
                          high_frequency_pwm_counter_init <= F4;
                          note <= 4;
+                         is_effect <= 1'b0;
                     end
                     `G_NOTE_BUTTON: begin                               // Character: S (Sol)
                          high_frequency_pwm_enable <= 1;
                          high_frequency_pwm_counter_init <= G4;
                          note <= 5;
+                         is_effect <= 1'b0;
                     end
                     `A_NOTE_BUTTON: begin                               // Character: L (La)
                          high_frequency_pwm_enable <= 1;
                          high_frequency_pwm_counter_init <= A4;
                          note <= 6;
+                         is_effect <= 1'b0;
                     end
                     `B_NOTE_BUTTON: begin                               // Character: C (Ci)
                          high_frequency_pwm_enable <= 1;
                          high_frequency_pwm_counter_init <= B4;
                          note <= 7;
+                         is_effect <= 1'b0;
                     end
                     default: begin                             // Holds display as is, cuts the sound
                          high_frequency_pwm_enable <= 0;
                          high_frequency_pwm_counter_init <= 0;
                          note <= 0;
+                         is_effect <= 1'b0;
                     end
                endcase
           end
