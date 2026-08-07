@@ -55,6 +55,16 @@ module pwm_driver (reset, clk, enable, valid, scancode, high_frequency_pwm_count
      localparam B4_VIB_UP = B4 - 8*B4_VIB_STEP;
      localparam B4_VIB_DOWN = B4 + 8*B4_VIB_STEP;
 
+     // Number of PWM periods to get staccato at roughly the same times,
+     // but without having a massive cycle counter for the exact timing
+     localparam C4_STAC_MAX = 1571;
+     localparam D4_STAC_MAX = 1764;
+     localparam E4_STAC_MAX = 1979;
+     localparam F4_STAC_MAX = 2094;
+     localparam G4_STAC_MAX = 2352;
+     localparam A4_STAC_MAX = 2638;
+     localparam B4_STAC_MAX = 2963;
+
      input reset, clk, enable, valid, high_frequency_pwm_enable, vibrato, staccato;
      input [7:0] scancode;
      input [PWM_COUNTER_WIDTH-1:0] high_frequency_pwm_counter_init;
@@ -112,46 +122,55 @@ module pwm_driver (reset, clk, enable, valid, scancode, high_frequency_pwm_count
                     step = 0;
                     bound_up = 0;
                     bound_down = 0;
+                    stac_max_count = 0;
                end
                1: begin
                     step = C4_VIB_STEP;
                     bound_up = C4_VIB_UP;
                     bound_down = C4_VIB_DOWN;
+                    stac_max_count = C4_STAC_MAX;
                end
                2: begin
                     step = D4_VIB_STEP;
                     bound_up = D4_VIB_UP;
                     bound_down = D4_VIB_DOWN;
+                    stac_max_count = D4_STAC_MAX;
                end
                3: begin
                     step = E4_VIB_STEP;
                     bound_up = E4_VIB_UP;
                     bound_down = E4_VIB_DOWN;
+                    stac_max_count = E4_STAC_MAX;
                end
                4: begin
                     step = F4_VIB_STEP;
                     bound_up = F4_VIB_UP;
                     bound_down = F4_VIB_DOWN;
+                    stac_max_count = F4_STAC_MAX;
                end
                5: begin
                     step = G4_VIB_STEP;
                     bound_up = G4_VIB_UP;
                     bound_down = G4_VIB_DOWN;
+                    stac_max_count = G4_STAC_MAX;
                end
                6: begin
                     step = A4_VIB_STEP;
                     bound_up = A4_VIB_UP;
                     bound_down = A4_VIB_DOWN;
+                    stac_max_count = A4_STAC_MAX;
                end
                7: begin
                     step = B4_VIB_STEP;
                     bound_up = B4_VIB_UP;
                     bound_down = B4_VIB_DOWN;
+                    stac_max_count = B4_STAC_MAX;
                end
                default: begin
                     step = 0;
                     bound_up = 0;
                     bound_down = 0;
+                    stac_max_count = 0;
                end
           endcase
      end
@@ -179,6 +198,7 @@ module pwm_driver (reset, clk, enable, valid, scancode, high_frequency_pwm_count
           end
      end
 
+     // Sampling to see rising edge of PWM
      assign pwm_rose = ~pwm_sample & pwm_internal;
 
      // Vibrato logic
@@ -199,7 +219,23 @@ module pwm_driver (reset, clk, enable, valid, scancode, high_frequency_pwm_count
           end
      end
 
-     assign pwm = pwm_internal;
+     // Staccato logic
+     assign cut_audio = stac_counter == stac_max_count;
+     always @(posedge reset or posedge clk) begin
+          if (reset) stac_counter <= 0;
+          else if (enable) begin
+               if (high_frequency_pwm_enable) begin
+                    if (valid) stac_counter <= 0;
+                    else if (staccato) begin
+                         if (pwm_rose) begin
+                              stac_counter <= (cut_audio) ? stac_counter : stac_counter + 1;
+                         end
+                    end
+               end
+          end
+     end
+
+     assign pwm = (cut_audio) ? 1'b0 : pwm_internal;
 
 
 endmodule
