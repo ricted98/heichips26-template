@@ -92,6 +92,7 @@ module kbd_decoder (reset, clk, valid, scancode, note, high_frequency_pwm_counte
                     default: begin                             // Holds display as is, cuts the sound
                          high_frequency_pwm_enable <= 0;
                          high_frequency_pwm_counter_init <= 0;
+                         note <= 0;
                     end
                endcase
           end

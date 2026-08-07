@@ -51,6 +51,13 @@ module top_module (reset, pixel_clk, ps2clk, ps2data, hsync, vsync, red, green, 
           staccato
      );
 
+     reg note_valid;
+
+     always @(posedge pixel_clk or posedge reset) begin
+          if (reset) note_valid <= 1'b0;
+          else       note_valid <= valid;
+     end
+
      // Display-related instantiations
      vga_protocol #(
           .ROM_DATA_WIDTH (ROM_DATA_WIDTH),
@@ -59,6 +66,7 @@ module top_module (reset, pixel_clk, ps2clk, ps2data, hsync, vsync, red, green, 
           .reset             (reset),
           .clk               (pixel_clk),
           .note              (note),
+          .note_valid        (note_valid),
           .hsync             (hsync),
           .vsync             (vsync),
           .clef_placement    (clef_placement),

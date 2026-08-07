@@ -13,7 +13,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-module vga_protocol (reset, clk, note, hsync, vsync, line_placement, clef_placement, note_display_area, memory_address);
+module vga_protocol (reset, clk, note, note_valid, hsync, vsync, line_placement, clef_placement, note_display_area, memory_address);
 
      // Note memory ROM parameters
      parameter ROM_DATA_WIDTH = 32;
@@ -47,8 +47,8 @@ module vga_protocol (reset, clk, note, hsync, vsync, line_placement, clef_placem
      // Note parameters
      localparam NOTE_THICKNESS = ROM_DATA_WIDTH;
      localparam NOTE_HEIGHT = 64;
-     localparam H_LEFT_BORDER = (H_SYNC_PULSE + H_BACK_PORCH + H_END - NOTE_THICKNESS - 1) / 2;
-     localparam H_RIGHT_BORDER = H_LEFT_BORDER + NOTE_THICKNESS;
+     localparam H_LEFT_BORDER = H_BACK_PORCH + H_SYNC_PULSE;
+     localparam H_RIGHT_BORDER = H_END - H_FRONT_PORCH;
 
      // Treble clef parameters
      localparam TREBLE_THICKNESS = 64;
@@ -60,6 +60,7 @@ module vga_protocol (reset, clk, note, hsync, vsync, line_placement, clef_placem
 
      input reset, clk;
      input [2:0] note;
+     input       note_valid;
      output hsync, vsync, line_placement, clef_placement, note_display_area;
      output [ROM_ADDR_WIDTH-1:0] memory_address;
 
@@ -73,6 +74,12 @@ module vga_protocol (reset, clk, note, hsync, vsync, line_placement, clef_placem
      wire [6:0] clef_from_memory;
      wire [63:0] clef_data;
 
+     wire [2:0] current_note;
+     wire       display_area_is_clef;
+     wire       current_note_is_valid;
+     wire       is_valid_display_area;
+
+     wire       clef_display_area;
 
      always @(posedge reset or posedge clk) begin
           if (reset) begin
@@ -116,7 +123,7 @@ module vga_protocol (reset, clk, note, hsync, vsync, line_placement, clef_placem
      assign clef_placement = clef_display_area & clef_data[(TREBLE_CLEF_LEFT+TREBLE_THICKNESS-1) - pixel_counter];
 
      // Optimized logic for the memory pointer
-     assign note_type = {2'b11, &note, note[0]};
+     assign note_type = {2'b11, &current_note, current_note[0]};
 
      // Logic for top and bottom borders of note being displayed.
      // Basically, there are 3 types of notes: "through line", "between lines" and "upside-down"
@@ -127,7 +134,7 @@ module vga_protocol (reset, clk, note, hsync, vsync, line_placement, clef_placem
      always @(posedge reset or posedge clk) begin
           if (reset) top_of_note <= 0;
           else begin
-               case(note)
+               case(current_note)
                     3'b000: top_of_note <= 0;
                     3'b001: top_of_note <= LINE_FOURTH + LINE_THICKNESS + 1;
                     3'b010: top_of_note <= LINE_FIFTH - 2*LINE_TO_LINE_DISTANCE + 5*LINE_THICKNESS - 1;
@@ -140,14 +147,57 @@ module vga_protocol (reset, clk, note, hsync, vsync, line_placement, clef_placem
           end
      end
 
+     reg [9:0] visible_counter_q, visible_counter_d;
+
+     always @(posedge clk or posedge reset) begin
+          if (reset) visible_counter_q <= '0;
+          else       visible_counter_q <= visible_counter_d;
+     end
+
+     always @(*) begin
+          visible_counter_d = visible_counter_q;
+          if (pixel_counter >= H_LEFT_BORDER && pixel_counter <= H_RIGHT_BORDER)
+               visible_counter_d = visible_counter_q + 1'b1;
+          else
+               visible_counter_d = '0;
+     end
 
      // Movable display area so as to use 3 types of notes basically instead of just a bigger ROM and 7 hard-coded notes
-     assign note_display_area = ((pixel_counter >= H_LEFT_BORDER) && (pixel_counter <= H_RIGHT_BORDER) &&
-                                    (line_counter >= top_of_note) && (line_counter <= bottom_of_note));
+     assign note_display_area = !display_area_is_clef && current_note_is_valid &&
+                                    is_valid_display_area &&
+                                    (line_counter >= top_of_note) && (line_counter <= bottom_of_note);
      assign line_from_memory = (line_counter >= top_of_note) ? (line_counter - top_of_note) : 0;
 
      // Final address to go to Note Character ROM
 	assign memory_address = {note_type, line_from_memory};
 
+     // Multiple note display
+     localparam NUM_DISPLAY_AREAS = 5;
+     localparam NUM_NOTE_DISPLAY_AREAS = NUM_DISPLAY_AREAS - 1;
+     localparam DISPLAY_AREA_PTR_WIDTH = $clog2(NUM_DISPLAY_AREAS);
+     localparam DISPLAY_AREA = H_VISIBLE_PIXELS / NUM_DISPLAY_AREAS;
+     localparam NOTE_DISPLAY_AREA_PTR_WIDTH = $clog2(NUM_NOTE_DISPLAY_AREAS);
+
+     wire [DISPLAY_AREA_PTR_WIDTH-1:0] current_display_area;
+     wire [NOTE_DISPLAY_AREA_PTR_WIDTH-1:0] note_sel;
+
+     fifo_shift #(
+          .N          (NUM_NOTE_DISPLAY_AREAS),
+          .DATA_WIDTH ($bits(note))
+     ) note_fifo_shift_i (
+          .clk_i   (clk),
+          .rst_i   (reset),
+          .push_i  (note_valid),
+          .data_i  (note),
+          .sel_i   (note_sel),
+          .data_o  (current_note),
+          .valid_o (current_note_is_valid)
+     );
+
+     assign current_display_area = visible_counter_q[9:9-DISPLAY_AREA_PTR_WIDTH+1];
+     assign note_sel = (current_display_area-1);
+     assign display_area_is_clef = current_display_area == 'b0;
+     assign is_valid_display_area = (visible_counter_q >= ((DISPLAY_AREA / 2) * (2 * current_display_area + 1) - (NOTE_THICKNESS / 2))) &&
+                                    (visible_counter_q <  ((DISPLAY_AREA / 2) * (2 * current_display_area + 1) + (NOTE_THICKNESS / 2)));
 
 endmodule

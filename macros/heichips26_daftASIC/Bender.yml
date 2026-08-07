@@ -12,6 +12,7 @@ sources:
 - rtl/eighth_note_memory.v
 - rtl/eighth_space_stem_down_rom.v
 - rtl/eighth_space_stem_up_rom.v
+- rtl/fifo_shift.sv
 - rtl/fpga_clk_div.v
 - rtl/fpga_top_module.v
 - rtl/full_line_stem_down_rom.v
@@ -26,9 +27,7 @@ sources:
 - rtl/half_space_stem_up_rom.v
 - rtl/kbd_decoder.v
 - rtl/kbd_protocol_modified.v
-- rtl/note_fifo.v
 - rtl/note_memory.v
-- rtl/note_storage.v
 - rtl/parallel_to_serial.v
 - rtl/pwm_driver.v
 - rtl/quarter_line_stem_down_rom.v
