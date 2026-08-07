@@ -66,7 +66,7 @@ module pwm_driver (reset, clk, enable, valid, scancode, high_frequency_pwm_count
      input reset, clk, enable, valid, high_frequency_pwm_enable, vibrato, staccato;
      input [7:0] scancode;
      input [15:0] high_frequency_pwm_counter_init;
-     output pwm;
+     output reg pwm;
 
      reg pwm_internal;
      reg [15:0] period_counter;
@@ -182,19 +182,18 @@ module pwm_driver (reset, clk, enable, valid, scancode, high_frequency_pwm_count
      // count PWM transisitons for staccato
      assign pwm_rose = ~pwm_sample & pwm_internal;
 
-     // Staccato mutes the output pin combinationally only to avoid re-syncing other modes
-     assign pwm = pwm_internal & ~note_off;
-
      // Create output pulse
      always @(posedge reset or posedge clk) begin
           if (reset) begin
                pwm_internal <= 0;
                period_counter <= 0;
                pwm_sample <= 1'b0;
+               pwm <= 1'b0;
           end
           else if (enable) begin
                if (high_frequency_pwm_enable) begin
                     pwm_sample <= pwm_internal;
+                    pwm <= pwm_internal & ~note_off;        // Staccato mutes the output pin only to avoid re-syncing other modes
                     if (period_counter == high_frequency_pwm_counter) begin
                          pwm_internal <= ~pwm_internal;
                          period_counter <= 0;
