@@ -105,14 +105,16 @@ module top_module (reset, pixel_clk, ps2clk, ps2data, hsync, vsync, red, green, 
      // Replication operator to produce the RGB for display easily.
      // No need to carry 9 bits around before we reach the display
      // assign {red, green, blue} = {3{line_placement | note_serial_out | clef_placement}};
-     always @(rgb_out or vibrato or staccato or line_placement or note_serial_out or note_display_area or clef_placement) begin
+     wire static_part;
+     assign static_part = clef_placement | line_placement;
+     always @(rgb_out or vibrato or staccato or line_placement or note_serial_out or note_display_area or clef_placement or static_part) begin
           if (note_display_area) begin
-               if (vibrato & staccato) rgb_out = 3'b110 & {3{note_serial_out}};
-               else if (vibrato) rgb_out = 3'b101 & {3{note_serial_out}};
-               else if (staccato) rgb_out = 3'b011 & {3{note_serial_out}};
+               if (vibrato & staccato) rgb_out = (3'b110 & {3{note_serial_out}} == 3'b000) ? {3{static_part}} : 3'b110 & {3{note_serial_out}};
+               else if (vibrato) rgb_out = (3'b101 & {3{note_serial_out}} == 3'b000) ? {3{static_part}} : 3'b101 & {3{note_serial_out}};
+               else if (staccato) rgb_out = (3'b011 & {3{note_serial_out}} == 3'b000) ? {3{static_part}} : 3'b011 & {3{note_serial_out}};
                else rgb_out = {3{note_serial_out}};
           end
-          else if (clef_placement | line_placement) rgb_out = 3'b111;
+          else if (static_part) rgb_out = 3'b111;
           else rgb_out = 3'b000;
      end
 
