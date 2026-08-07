@@ -77,9 +77,15 @@ module pwm_driver (reset, clk, enable, valid, scancode, high_frequency_pwm_count
      reg [PWM_COUNTER_WIDTH-1:0] stac_max_count, stac_counter;
      reg [2:0] note_loaded;
      reg up_count, pwm_sample;
+     reg [7:0] scancode_reg;
 
      wire [PWM_COUNTER_WIDTH-1:0] vib_downwards, vib_upwards;
      wire pwm_rose, note_off;
+
+     always @(posedge reset or posedge clk) begin
+          if (reset) scancode_reg <= 8'h0;
+          else scancode_reg <= scancode;
+     end
 
 
      // Type of note loaded will decide the boundaries
@@ -87,7 +93,7 @@ module pwm_driver (reset, clk, enable, valid, scancode, high_frequency_pwm_count
      always @(posedge reset or posedge clk) begin
           if (reset) note_loaded <= 0;
           else if (enable & valid) begin
-               case(scancode)
+               case(scancode_reg)
                     8'h23: begin                               // Character: D (Do)
                          note_loaded <= 1;
                     end
@@ -213,7 +219,8 @@ module pwm_driver (reset, clk, enable, valid, scancode, high_frequency_pwm_count
           end
      end
 
-     assign note_off = (stac_counter == stac_max_count);
+     // assign note_off = (stac_counter == stac_max_count);
+     assign note_off = 1'b0;
 
      // Count PWM periods since the last valid pulse for staccato,
      // and saturate at the end to mute the output
@@ -240,7 +247,7 @@ module pwm_driver (reset, clk, enable, valid, scancode, high_frequency_pwm_count
                     up_count <= 1'b1;
                end
                else if (vibrato & pwm_rose) begin
-                    high_frequency_pwm_counter <= up_count ? vib_upwards : vib_downwards;
+                    high_frequency_pwm_counter <= (up_count) ? vib_upwards : vib_downwards;
                     if (high_frequency_pwm_counter == bound_up) up_count <= 1'b1;
                     else if (high_frequency_pwm_counter == bound_down) up_count <= 1'b0;
                end
