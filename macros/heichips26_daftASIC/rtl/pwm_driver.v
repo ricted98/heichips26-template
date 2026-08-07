@@ -77,14 +77,14 @@ module pwm_driver (reset, clk, enable, valid, scancode, high_frequency_pwm_count
      reg [PWM_COUNTER_WIDTH-1:0] stac_max_count, stac_counter;
      reg [2:0] note_loaded;
      reg up_count, pwm_sample;
-     reg [7:0] scancode_reg;
+     reg [7:0] valid_reg;
 
      wire [PWM_COUNTER_WIDTH-1:0] vib_downwards, vib_upwards;
      wire pwm_rose, note_off;
 
      always @(posedge reset or posedge clk) begin
-          if (reset) scancode_reg <= 8'h0;
-          else scancode_reg <= scancode;
+          if (reset) valid_reg <= 1'b0;
+          else valid_reg <= valid;
      end
 
 
@@ -92,8 +92,8 @@ module pwm_driver (reset, clk, enable, valid, scancode, high_frequency_pwm_count
      // of oscillation and the central frequency
      always @(posedge reset or posedge clk) begin
           if (reset) note_loaded <= 0;
-          else if (enable & valid) begin
-               case(scancode_reg)
+          else if (enable & valid_reg) begin
+               case(scancode)
                     8'h23: begin                               // Character: D (Do)
                          note_loaded <= 1;
                     end
@@ -227,7 +227,7 @@ module pwm_driver (reset, clk, enable, valid, scancode, high_frequency_pwm_count
      always @(posedge reset or posedge clk) begin
           if (reset) stac_counter <= 0;
           else if (enable) begin
-               if (valid) stac_counter <= 0;
+               if (valid_reg) stac_counter <= 0;
                else if (staccato & pwm_rose) begin
                     if (note_off) stac_counter <= stac_counter;
                     else stac_counter <= stac_counter + 1;
@@ -242,7 +242,7 @@ module pwm_driver (reset, clk, enable, valid, scancode, high_frequency_pwm_count
                up_count <= 1'b1;
           end
           else if (enable) begin
-               if (valid) begin         // New button press, so (re-)load count etc
+               if (valid_reg) begin         // New button press, so (re-)load count etc
                     high_frequency_pwm_counter <= high_frequency_pwm_counter_init;
                     up_count <= 1'b1;
                end
